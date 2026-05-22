@@ -1,0 +1,3749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Garden - Life RPG</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans:wght@300;400;500;700&display=swap');
+
+        :root {
+            --grass-green: #a8c5a0;
+            --sky-blue: #b8d4e3;
+            --warm-sun: #f5d061;
+            --soft-pink: #e8b4b8;
+            --mint: #c3e8d1;
+            --lavender: #d4c5e3;
+            --sand: #f5e6d3;
+            --wood: #8b7355;
+            --dark-wood: #5c4a3a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(-45deg, var(--sky-blue), var(--mint), var(--lavender), #FFE4E1);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--dark-wood);
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 登录遮罩层 */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, var(--sky-blue) 0%, var(--grass-green) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-container .pixel-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 var(--warm-sun);
+        }
+
+        .login-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: var(--grass-green);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--warm-sun);
+            color: var(--dark-wood);
+        }
+
+        .form-container {
+            display: block;
+        }
+
+        .form-container.hidden {
+            display: none;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--dark-wood);
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--grass-green);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--warm-sun);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--warm-sun), #FFA000);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #c75050;
+            font-size: 12px;
+            margin-top: 10px;
+            min-height: 16px;
+        }
+
+        /* 登录后隐藏遮罩 */
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .pixel-title {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--dark-wood);
+            text-shadow: 4px 4px 0 var(--warm-sun);
+            letter-spacing: 2px;
+        }
+
+        .pixel-subtitle {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: var(--wood);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            display: flex;
+            justify-content: space-around;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                0 2px 8px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .status-item { text-align: center; }
+        .status-icon { font-size: 32px; margin-bottom: 5px; }
+        .status-value { font-size: 20px; font-weight: bold; color: var(--dark-wood); }
+        .status-label { font-size: 12px; color: var(--wood); }
+
+        /* 主要内容 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88));
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--warm-sun), var(--grass-green), var(--lavender));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.015);
+            box-shadow: 
+                0 16px 48px rgba(0, 0, 0, 0.15),
+                0 6px 20px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        }
+
+        .card-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            color: var(--dark-wood);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 花园区域 */
+        .garden-area {
+            position: relative;
+            height: 400px;
+            background: linear-gradient(180deg, var(--sky-blue) 0%, var(--grass-green) 30%, #8fb885 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        /* 云朵 */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.9;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .cloud-1 { width: 60px; height: 30px; top: 30px; left: 20%; }
+        .cloud-1::before { width: 30px; height: 30px; top: -15px; left: 10px; }
+        .cloud-1::after { width: 40px; height: 40px; top: -20px; left: 25px; }
+
+        .cloud-2 { width: 80px; height: 40px; top: 50px; right: 15%; animation-delay: -4s; }
+        .cloud-2::before { width: 40px; height: 40px; top: -20px; left: 15px; }
+        .cloud-2::after { width: 50px; height: 50px; top: -25px; left: 35px; }
+
+        /* 太阳 */
+        .weather-sun {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #FFF9C4 0%, var(--warm-sun) 50%, #FFA000 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px var(--warm-sun);
+            animation: pulse 2s ease-in-out infinite;
+            cursor: pointer;
+        }
+
+        /* 像素宠物 */
+        .pixel-pet {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .pixel-pet:hover {
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        /* 宠物身体 - 作为主容器 */
+        .pet-body {
+            width: 52px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFE4E1, #FFB6C1);
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 宠物多种状态 */
+        .pet-neutral .pet-body { /* 中性状态 - 没有动画，保持静止 */ }
+        .pet-happy .pet-body { animation: bounce 0.6s ease-in-out infinite; }
+        .pet-sad .pet-body { opacity: 0.6; transform: scale(0.95) translateY(5px); }
+        .pet-angry .pet-body { animation: angryShake 0.3s ease-in-out infinite; }
+        .pet-sleepy .pet-body { opacity: 0.7; }
+        .pet-surprised .pet-body { animation: surpriseJump 0.5s ease-out; }
+        .pet-excited .pet-body { animation: bounce 0.4s ease-in-out infinite; }
+
+        /* 眼睛 */
+        .pet-eye {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+            top: 12px;
+        }
+
+        .pet-eye.left { left: 10px; }
+        .pet-eye.right { right: 10px; }
+
+        /* 不同状态的眼睛 */
+        .pet-sad .pet-eye { transform: translateY(2px); }
+        .pet-angry .pet-eye {
+            background: #FF5722;
+            box-shadow: 0 0 8px #FF5722;
+        }
+        .pet-sleepy .pet-eye {
+            background: #9E9E9E;
+        }
+        .pet-sleepy .pet-pupil {
+            transform: scaleY(0.2);
+        }
+        .pet-surprised .pet-eye {
+            width: 14px;
+            height: 14px;
+        }
+
+        .pet-pupil {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            animation: blink 4s ease-in-out infinite;
+        }
+
+        /* 嘴巴 */
+        .pet-mouth {
+            position: absolute;
+            width: 14px;
+            height: 8px;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .pet-mouth-happy {
+            background: #FF6B6B;
+            border-radius: 0 0 7px 7px;
+        }
+        .pet-mouth-sad {
+            background: #9E9E9E;
+            border-radius: 7px 7px 0 0;
+            height: 6px;
+        }
+        .pet-mouth-angry {
+            background: #E64A19;
+            border-radius: 2px;
+            width: 10px;
+            height: 3px;
+        }
+        .pet-mouth-sleepy {
+            background: #9E9E9E;
+            border-radius: 50%;
+            width: 6px;
+            height: 2px;
+        }
+        .pet-mouth-surprised {
+            background: #FF6B6B;
+            border-radius: 50%;
+            width: 8px;
+            height: 8px;
+        }
+        .pet-mouth-excited {
+            background: #FF1744;
+            border-radius: 0 0 8px 8px;
+            width: 18px;
+        }
+        .pet-mouth-neutral {
+            background: #FF6B6B;
+            border-radius: 0 0 7px 7px;
+            height: 6px;
+        }
+
+        /* 腮红 */
+        .pet-cheek {
+            position: absolute;
+            width: 10px;
+            height: 6px;
+            background: rgba(255, 182, 193, 0.7);
+            border-radius: 50%;
+            top: 20px;
+        }
+        .pet-cheek.left { left: 4px; }
+        .pet-cheek.right { right: 4px; }
+        .pet-excited .pet-cheek {
+            background: rgba(255, 100, 100, 0.8);
+            animation: blush 0.5s ease-in-out infinite alternate;
+        }
+        
+        /* 蓝色荧光棒 */
+            .glow-stick {
+                position: absolute;
+                opacity: 0;  /* 默认隐藏 */
+                transition: opacity 0.5s ease;
+                pointer-events: none;
+                z-index: 15;
+            }
+            .glow-stick.left {
+                left: 0;
+                top: 16px;
+                transform-origin: left center;  /* 旋转中心在靠近身体的一端（左端） */
+                transform: rotate(-20deg);
+            }
+            .glow-stick.right {
+                right: 0;
+                top: 16px;
+                transform-origin: right center;   /* 旋转中心在靠近身体的一端（右端） */
+                transform: rotate(20deg);
+            }
+            /* 荧光棒主体 */
+            .glow-stick-body {
+                width: 22px;
+                height: 4px;
+                background: linear-gradient(90deg, #00BFFF, #87CEEB);
+                border-radius: 0 3px 3px 0;
+                box-shadow: 0 0 8px #00BFFF, 0 0 15px #00BFFF, 0 0 25px #00BFFF;
+            }
+            .glow-stick.right .glow-stick-body {
+                border-radius: 3px 0 0 3px;
+            }
+        /* 高兴时显示并挥舞荧光棒 */
+        .pet-happy .glow-stick,
+        .pet-excited .glow-stick {
+            opacity: 1;
+        }
+        .pet-happy .glow-stick.left {
+            animation: waveLeft 0.5s ease-in-out infinite;
+        }
+        .pet-happy .glow-stick.right {
+            animation: waveRight 0.5s ease-in-out infinite;
+        }
+        .pet-excited .glow-stick.left {
+            animation: waveLeft 0.3s ease-in-out infinite;
+        }
+        .pet-excited .glow-stick.right {
+            animation: waveRight 0.3s ease-in-out infinite;
+        }
+
+        /* 尾巴已移除 */
+
+        /* 状态动画 */
+        @keyframes angryShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        @keyframes surpriseJump {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0); }
+        }
+
+        @keyframes angryTail {
+            0%, 100% { transform: rotate(-25deg); }
+            50% { transform: rotate(-35deg); }
+        }
+
+        @keyframes blush {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* 宠物装饰品 */
+        .pet-accessory {
+            position: absolute;
+            z-index: 20;
+            font-size: 20px;
+        }
+
+        .accessory-hat { top: -25px; left: 50%; transform: translateX(-50%); }
+        .accessory-sunglasses { top: 5px; left: 50%; transform: translateX(-50%); }
+        .accessory-bowtie { bottom: -8px; left: 50%; transform: translateX(-50%); }
+
+        /* 主植物 */
+        .main-plant {
+            position: absolute;
+            bottom: 25px;
+            left: 30%;
+        }
+
+        .plant-stem {
+            width: 12px;
+            height: 80px;
+            background: linear-gradient(to top, #4CAF50, #8BC34A);
+            border-radius: 6px 6px 0 0;
+        }
+
+        .plant-flower {
+            position: absolute;
+            top: -30px;
+            left: -10px;
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        .flower-center {
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #FFEB3B, #FFC107);
+            border-radius: 50%;
+        }
+
+        .flower-petal {
+            position: absolute;
+            width: 12px;
+            height: 22px;
+            background: linear-gradient(to top, var(--soft-pink), #FFCCBC);
+            border-radius: 6px;
+        }
+
+        .flower-petal:nth-child(1) { top: -18px; left: 4px; transform: rotate(-30deg); }
+        .flower-petal:nth-child(2) { top: -12px; left: 18px; transform: rotate(20deg); }
+        .flower-petal:nth-child(3) { top: 5px; left: 16px; transform: rotate(70deg); }
+        .flower-petal:nth-child(4) { top: 10px; left: 2px; transform: rotate(-70deg); }
+        .flower-petal:nth-child(5) { top: -2px; left: -8px; transform: rotate(-120deg); }
+
+        /* 大树 */
+        .big-tree {
+            position: absolute;
+            right: 15%;
+            bottom: 20px;
+        }
+
+        .tree-trunk {
+            width: 40px;
+            height: 100px;
+            background: linear-gradient(to right, #5D4037, #795548, #5D4037);
+            border-radius: 8px 8px 0 0;
+            margin: 0 auto;
+        }
+
+        .tree-crown {
+            position: absolute;
+            width: 120px;
+            height: 100px;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tree-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, #1B5E20, #388E3C);
+        }
+
+        .tree-circle:nth-child(1) { width: 80px; height: 80px; bottom: 0; left: 20px; }
+        .tree-circle:nth-child(2) { width: 70px; height: 70px; bottom: 20px; left: -5px; }
+        .tree-circle:nth-child(3) { width: 60px; height: 60px; bottom: 30px; left: 60px; }
+
+        /* 装饰 */
+        .mushroom {
+            position: absolute;
+            bottom: 25px;
+            left: 15%;
+            cursor: pointer;
+        }
+
+        .mushroom-cap {
+            width: 28px;
+            height: 18px;
+            background: linear-gradient(to bottom, #E53935, #C62828);
+            border-radius: 14px 14px 4px 4px;
+        }
+
+        .mushroom-stem {
+            width: 10px;
+            height: 12px;
+            background: #E0E0E0;
+            margin: 0 auto;
+            border-radius: 0 0 3px 3px;
+        }
+
+        .butterfly {
+            position: absolute;
+            font-size: 18px;
+            animation: butterflyFly 8s ease-in-out infinite;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .butterfly.a { top: 80px; left: 20%; }
+        .butterfly.b { top: 120px; left: 60%; animation-delay: -3s; }
+
+        .bee {
+            position: absolute;
+            font-size: 16px;
+            animation: beeBuzz 4s ease-in-out infinite;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .bee.a { top: 100px; left: 70%; }
+
+        /* 工具 */
+        .watering-can {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .fertilizer {
+            position: absolute;
+            bottom: 15px;
+            right: 60px;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        /* Task List */
+        .task-list { list-style: none; }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: linear-gradient(145deg, var(--sand), #f0e6d2);
+            border-radius: 12px;
+            cursor: pointer;
+            border-left: 4px solid var(--warm-sun);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-item:hover {
+            background: linear-gradient(145deg, var(--mint), #b8e6c1);
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px rgba(168, 197, 160, 0.3);
+        }
+        .task-item.completed {
+            opacity: 0.7;
+            border-left-color: #556B2F;
+            background: linear-gradient(145deg, #e8f5e9, #c8e6c9);
+        }
+        .task-item.completed .task-text { text-decoration: line-through; color: #66BB6A; }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--wood);
+            border-radius: 4px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-item.completed .task-checkbox { background: #556B2F; }
+        .task-checkbox::after { content: '✓'; color: white; font-size: 12px; display: none; }
+        .task-item.completed .task-checkbox::after { display: block; }
+
+        .task-text { flex: 1; font-size: 14px; color: var(--dark-wood); }
+
+        .add-task-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .add-task-container input {
+            padding: 8px;
+            border: 2px solid var(--grass-green);
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .add-task-container input[type="text"] {
+            flex: 1;
+        }
+
+        .add-task-container input[type="number"] {
+            width: 70px;
+        }
+
+        .add-task-container button {
+            padding: 8px 12px;
+            background: var(--warm-sun);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .task-count {
+            font-size: 12px;
+            color: var(--wood);
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        .task-delete {
+            background: #c75050;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            width: 20px;
+            height: 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .task-item:hover .task-delete {
+            display: block;
+        }
+
+        .task-reward {
+            font-size: 12px;
+            color: #556B2F;
+            background: rgba(85, 107, 47, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* 消费记录 */
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px;
+            margin-bottom: 10px;
+            background: linear-gradient(145deg, var(--lavender), #c4b5e3);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(168, 155, 227, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .expense-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 155, 227, 0.3);
+        }
+
+        .expense-info { display: flex; align-items: center; gap: 10px; }
+        .expense-emoji { font-size: 24px; }
+        .expense-details h4 { font-size: 14px; color: var(--dark-wood); }
+        .expense-details p { font-size: 12px; color: var(--wood); }
+        .expense-amount { font-size: 16px; font-weight: bold; color: #c75050; }
+
+        /* 心情选择器 */
+        .mood-selector { display: flex; gap: 10px; margin-bottom: 15px; }
+
+        .mood-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            font-size: 26px;
+            cursor: pointer;
+            background: linear-gradient(145deg, var(--sand), #f0e6d2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .mood-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        .mood-btn.active {
+            transform: scale(1.25);
+            box-shadow: 0 0 20px rgba(245, 208, 97, 0.5);
+            background: linear-gradient(145deg, var(--warm-sun), #FFE066);
+        }
+
+        /* 表单 */
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--wood);
+            margin-bottom: 5px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--grass-green);
+            border-radius: 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.85);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--warm-sun);
+            box-shadow: 0 0 0 4px rgba(245, 208, 97, 0.3), 0 4px 15px rgba(245, 208, 97, 0.2);
+            background: white;
+            transform: translateY(-1px);
+        }
+
+        .form-group input:disabled {
+            background: rgba(200, 200, 200, 0.3);
+            border-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px 28px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--warm-sun), #f0c040);
+            color: var(--dark-wood);
+            box-shadow: 
+                0 4px 15px rgba(245, 208, 97, 0.4),
+                0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 8px 25px rgba(245, 208, 97, 0.5),
+                0 2px 8px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #FFE066, var(--warm-sun));
+        }
+
+        .btn:active {
+            transform: translateY(-1px) scale(0.99);
+            box-shadow: 0 3px 12px rgba(245, 208, 97, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--lavender), #c4b5e3);
+            box-shadow: 0 4px 15px rgba(212, 197, 227, 0.4);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #e0d5f0, var(--lavender));
+            box-shadow: 0 8px 25px rgba(212, 197, 227, 0.5);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e57373, #ef5350);
+            color: white;
+            box-shadow: 0 4px 15px rgba(229, 115, 115, 0.4);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ef9a9a, #e57373);
+            box-shadow: 0 8px 25px rgba(229, 115, 115, 0.5);
+        }
+
+        /* 日记 */
+        .diary-section {
+            background: var(--sand);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .diary-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: var(--dark-wood);
+            margin-bottom: 15px;
+        }
+
+        /* 日记列表 */
+        .diary-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .diary-item {
+            background: linear-gradient(145deg, #fff9e6, #fff3cd);
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 10px rgba(255, 215, 0, 0.1);
+            border-left: 4px solid #FFD700;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .diary-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .diary-text {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--dark-wood);
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .diary-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .diary-date {
+            font-size: 12px;
+            color: var(--wood);
+            font-weight: 500;
+        }
+
+        .diary-delete {
+            background: linear-gradient(135deg, #c75050, #a53030);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(199, 80, 80, 0.3);
+        }
+
+        .diary-delete:hover {
+            background: linear-gradient(135deg, #d76060, #c75050);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(199, 80, 80, 0.4);
+        }
+
+        /* 战报 */
+        .battle-report {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .battle-report h3 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+
+        .battle-report .highlight { color: #FFD700; font-weight: bold; }
+
+        /* 宝箱弹窗 */
+        .loot-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loot-box-container {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            animation: bounceIn 0.5s ease-out;
+        }
+
+        .treasure-chest {
+            width: 150px;
+            height: 120px;
+            margin: 0 auto 20px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .chest-lid {
+            width: 150px;
+            height: 40px;
+            background: linear-gradient(to bottom, #8B4513, #654321);
+            border-radius: 10px 10px 0 0;
+            position: absolute;
+            top: 0;
+            transition: transform 0.5s ease;
+            transform-origin: bottom center;
+            border: 3px solid #5D4037;
+        }
+
+        .treasure-chest:hover .chest-lid,
+        .treasure-chest.opening .chest-lid {
+            transform: rotateX(-120deg);
+        }
+
+        .chest-body {
+            width: 150px;
+            height: 80px;
+            background: linear-gradient(to bottom, #A0522D, #8B4513);
+            border-radius: 0 0 10px 10px;
+            position: absolute;
+            bottom: 0;
+            border: 3px solid #5D4037;
+        }
+
+        .chest-lock {
+            width: 25px;
+            height: 25px;
+            background: #FFD700;
+            border-radius: 50%;
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .reward-display { display: none; }
+        .reward-emoji { font-size: 60px; margin-bottom: 15px; }
+
+        .reward-rarity {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .reward-rarity.common { background: #9E9E9E; color: white; }
+        .reward-rarity.rare { background: #2196F3; color: white; }
+        .reward-rarity.legendary { background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a1a; }
+
+        .reward-name {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .reward-description {
+            font-size: 14px;
+            color: #FFE4E1;
+            margin-bottom: 20px;
+        }
+
+        .claim-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* 连击计数器 */
+        .combo-counter {
+            position: fixed;
+            top: 100px;
+            right: 50px;
+            background: linear-gradient(135deg, #FF5722, #FF9800);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            z-index: 500;
+            display: none;
+        }
+
+        /* 动画 */
+        @keyframes float {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(20px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes wag {
+            0% { transform: rotate(-30deg); }
+            100% { transform: rotate(30deg); }
+        }
+
+        @keyframes earWiggleLeft {
+            0%, 100% { transform: rotate(-15deg); }
+            50% { transform: rotate(-25deg); }
+        }
+
+        @keyframes earWiggleRight {
+            0%, 100% { transform: rotate(15deg); }
+            50% { transform: rotate(25deg); }
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+        
+        /* 蓝色荧光棒挥舞动画 - 手拿着下端，上端向外甩 */
+        @keyframes waveLeft {
+            0%, 100% { transform: rotate(-30deg); }  /* 靠近身体的位置 */
+            50% { transform: rotate(-70deg); }        /* 向外甩的位置 */
+        }
+        @keyframes waveRight {
+            0%, 100% { transform: rotate(30deg); }   /* 靠近身体的位置 */
+            50% { transform: rotate(70deg); }        /* 向外甩的位置 */
+        }
+        
+        /* 状态过渡效果 */
+        .pet-body,
+        .pet-eye,
+        .pet-mouth,
+        .pet-tail,
+        .pet-cheek,
+        .glow-stick {
+            transition: all 0.5s ease;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+        }
+
+        @keyframes butterflyFly {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(50px, -30px); }
+            50% { transform: translate(100px, -10px); }
+            75% { transform: translate(50px, -40px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        @keyframes beeBuzz {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(30px, 20px); }
+            50% { transform: translate(60px, 5px); }
+            75% { transform: translate(30px, 25px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(-50%) translateY(0); }
+            to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        @keyframes coinFall {
+            0% { top: -30px; opacity: 1; }
+            80% { top: 20px; opacity: 1; }
+            100% { top: 0; opacity: 0; }
+        }
+
+        @keyframes comboExplode {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        @keyframes fireworkBurst {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-50px) scale(1.5); opacity: 1; }
+            100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+        }
+
+        @keyframes gardenShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes rain {
+            0% { transform: translateY(-20px); opacity: 1; }
+            100% { transform: translateY(400px); opacity: 0; }
+        }
+
+        /* 闪光动画 */
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* 商店样式 */
+        .shop-items {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .shop-item {
+            background: linear-gradient(145deg, var(--sand), #f0e6d2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .shop-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--warm-sun);
+            box-shadow: 0 8px 25px rgba(245, 208, 97, 0.3);
+            background: linear-gradient(145deg, #fff8e7, var(--sand));
+        }
+
+        .shop-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .shop-item.disabled:hover {
+            border-color: transparent;
+        }
+
+        .shop-emoji {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .shop-name {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--dark-wood);
+            margin-bottom: 4px;
+        }
+
+        .shop-price {
+            font-size: 12px;
+            color: #556B2F;
+            font-weight: bold;
+        }
+
+        .shop-description {
+            font-size: 11px;
+            color: var(--wood);
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        @keyframes armSwing {
+            0% { transform: rotate(-30deg); }
+            50% { transform: rotate(60deg); }
+            100% { transform: rotate(-30deg); }
+        }
+
+        @keyframes eyeGlow {
+            0%, 100% { box-shadow: 0 0 5px #FF5722; }
+            50% { box-shadow: 0 0 15px #FF5722, 0 0 25px #FF9800; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录/注册界面 -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-container">
+            <h2 class="pixel-title">🎮 Mind Garden</h2>
+            <div class="login-tabs">
+                <button class="tab-btn active" id="login-tab">Login</button>
+                <button class="tab-btn" id="register-tab">Register</button>
+            </div>
+            
+            <!-- 登录表单 -->
+            <div class="form-container" id="login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password">
+                </div>
+                <button class="submit-btn" id="login-btn">Login</button>
+            </div>
+            
+            <!-- 注册表单 -->
+            <div class="form-container hidden" id="register-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="register-username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="register-password" placeholder="Enter password">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="register-password2" placeholder="Confirm password">
+                </div>
+                <button class="submit-btn" id="register-btn">Register</button>
+            </div>
+            
+            <p class="error-message" id="auth-error"></p>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1 class="pixel-title">Mind Garden</h1>
+            
+            <div class="user-info" id="user-info" style="display:none;">
+                <span class="username" id="current-username"></span>
+                <button class="logout-btn" id="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-icon">❤️</span>
+                <span class="status-value" id="hp-value">100</span>
+                <span class="status-label">HP</span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">⭐</span>
+                <span class="status-value" id="exp-value">0</span>
+                <span class="status-label">EXP</span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">💰</span>
+                <span class="status-value" id="gold-value">0</span>
+                <span class="status-label">Gold</span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">🌸</span>
+                <span class="status-value" id="garden-value">1</span>
+                <span class="status-label">Garden Lv</span>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="main-content">
+            <!-- 花园 -->
+            <div class="card">
+                <h2 class="card-title">🏡 My Mind Garden</h2>
+                <div class="garden-area" id="garden">
+                    <div class="cloud cloud-1"></div>
+                    <div class="cloud cloud-2"></div>
+                    <div class="weather-sun" id="sun"></div>
+                    <div class="butterfly a" id="butterfly1">🦋</div>
+                    <div class="butterfly b" id="butterfly2">🦋</div>
+                    <div class="bee a" id="bee1">🐝</div>
+                    
+                    <div class="big-tree" id="big-tree">
+                        <div class="tree-trunk"></div>
+                        <div class="tree-crown">
+                            <div class="tree-circle"></div>
+                            <div class="tree-circle"></div>
+                            <div class="tree-circle"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mushroom" id="mushroom">
+                        <div class="mushroom-cap"></div>
+                        <div class="mushroom-stem"></div>
+                    </div>
+                    
+                    <div class="main-plant" id="main-plant">
+                        <div class="plant-stem"></div>
+                        <div class="plant-flower">
+                            <div class="flower-petal"></div>
+                            <div class="flower-petal"></div>
+                            <div class="flower-petal"></div>
+                            <div class="flower-petal"></div>
+                            <div class="flower-petal"></div>
+                            <div class="flower-center"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 像素宠物 -->
+                    <div class="pixel-pet pet-neutral" id="pet">
+                        <div class="pet-body">
+                            <!-- 眼睛 -->
+                            <div class="pet-eye left">
+                                <div class="pet-pupil"></div>
+                            </div>
+                            <div class="pet-eye right">
+                                <div class="pet-pupil"></div>
+                            </div>
+                            
+                            <!-- 腮红 -->
+                            <div class="pet-cheek left"></div>
+                            <div class="pet-cheek right"></div>
+                            
+                            <!-- 嘴巴 -->
+                            <div class="pet-mouth pet-mouth-neutral" id="pet-mouth"></div>
+                            
+                            <!-- 蓝色荧光棒 -->
+                            <div class="glow-stick left" id="glow-stick-left">
+                                <div class="glow-stick-body"></div>
+                            </div>
+                            <div class="glow-stick right" id="glow-stick-right">
+                                <div class="glow-stick-body"></div>
+                            </div>
+                        </div>
+                        <div class="pet-accessory" id="pet-accessory"></div>
+                    </div>
+                    
+                    <div class="watering-can" id="watering-can">💧</div>
+                    <div class="fertilizer" id="fertilizer">🌿</div>
+                </div>
+            </div>
+
+            <!-- Task List -->
+            <div class="card">
+                <h2 class="card-title">📋 Today's Tasks</h2>
+                <div class="add-task-container">
+                    <input type="text" id="new-task-input" placeholder="Enter new task..." maxlength="20">
+                    <input type="number" id="new-task-reward" placeholder="EXP" min="5" max="30" value="15">
+                    <button id="add-task-btn">+ Add</button>
+                </div>
+                <ul class="task-list" id="task-list">
+                </ul>
+                <p class="task-count">Tasks: <span id="task-count">0</span>/10</p>
+            </div>
+
+            <!-- 消费记录 -->
+            <div class="card">
+                <h2 class="card-title">💸 Today's Expenses</h2>
+                <div class="form-group">
+                    <label>Select Mood</label>
+                    <div class="mood-selector" id="mood-selector">
+                        <button class="mood-btn" data-mood="happy">😊</button>
+                        <button class="mood-btn" data-mood="sad">😢</button>
+                        <button class="mood-btn" data-mood="anxious">😰</button>
+                        <button class="mood-btn" data-mood="excited">🤩</button>
+                        <button class="mood-btn" data-mood="neutral">😐</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Expense Name</label>
+                    <input type="text" id="expense-name" placeholder="e.g., Coffee, Shopping">
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="expense-amount" placeholder="0.00">
+                </div>
+                <button class="btn" id="add-expense">Record Expense</button>
+                
+                <div style="margin-top: 15px;">
+                    <button class="btn" id="monthly-expense-btn" style="background: linear-gradient(135deg, var(--lavender), #c4b5e3);">📊 View Monthly Expenses</button>
+                </div>
+                
+                <div id="expense-list" style="margin-top: 15px;">
+                    <!-- 用户添加的消费记录将显示在这里 -->
+                </div>
+            </div>
+
+            <!-- 商店 -->
+            <div class="card">
+                <h2 class="card-title">🏪 Garden Shop</h2>
+                <div class="shop-items" id="shop-items">
+                    <div class="shop-item" data-item="exp_boost">
+                        <div class="shop-emoji">⭐</div>
+                        <div class="shop-name">EXP Scroll</div>
+                        <div class="shop-price">💰 50</div>
+                        <div class="shop-description">Gain 30 EXP</div>
+                    </div>
+                    <div class="shop-item" data-item="pet_food">
+                        <div class="shop-emoji">🍖</div>
+                        <div class="shop-name">Pet Treat</div>
+                        <div class="shop-price">💰 20</div>
+                        <div class="shop-description">Makes pet happy</div>
+                    </div>
+                    <div class="shop-item" data-item="garden_boost">
+                        <div class="shop-emoji">🌿</div>
+                        <div class="shop-name">Super Fertilizer</div>
+                        <div class="shop-price">💰 40</div>
+                        <div class="shop-description">Garden plants grow strong</div>
+                    </div>
+                    <div class="shop-item" data-item="lucky_charm">
+                        <div class="shop-emoji">🍀</div>
+                        <div class="shop-name">Lucky Charm</div>
+                        <div class="shop-price">💰 80</div>
+                        <div class="shop-description">Guaranteed rare item next chest</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 背包 -->
+            <div class="card">
+                <h2 class="card-title">🎒 My Backpack</h2>
+                <div id="inventory-container" style="min-height: 150px;">
+                    <p style="text-align: center; color: var(--wood); padding: 30px;">Backpack is empty</p>
+                </div>
+            </div>
+
+            <!-- 日记 -->
+            <div class="card">
+                <h2 class="card-title">📔 Mind Diary</h2>
+                
+                <!-- 添加日记输入框 -->
+                <div class="add-diary-container" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="new-diary-input" placeholder="Record today's mood..." maxlength="100" style="flex: 1; padding: 10px; border: 2px solid var(--grass-green); border-radius: 8px; font-size: 14px;">
+                    <button id="add-diary-btn" style="padding: 10px 15px; border: none; border-radius: 8px; background: linear-gradient(135deg, var(--warm-sun), #f0c040); color: var(--dark-wood); font-weight: 600; cursor: pointer;">+ Add</button>
+                </div>
+                
+                <!-- 日记列表 -->
+                <div class="diary-list" id="diary-list">
+                    <!-- 日记条目将动态生成 -->
+                </div>
+            </div>
+
+            <!-- 战报 -->
+            <div class="card">
+                <h2 class="card-title">📊 Monthly Budget</h2>
+                <div class="budget-settings" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+                    <input type="number" id="budget-input" placeholder="Enter monthly budget" min="100" step="100" value="3000" style="flex: 1; min-width: 150px; padding: 12px 15px; border-radius: 12px; border: 2px solid var(--grass-green); font-size: 14px;">
+                    <button id="set-budget-btn" style="padding: 12px 20px; border-radius: 12px; border: none; background: linear-gradient(135deg, var(--warm-sun), #f0c040); color: var(--dark-wood); font-weight: 600; cursor: pointer; transition: all 0.3s;">✅ Set Budget</button>
+                    <button id="confirm-budget-btn" style="display:none; padding: 12px 20px; border-radius: 12px; border: none; background: linear-gradient(135deg, #4CAF50, #45a049); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s;">✅ Confirm</button>
+                    <button id="change-budget-btn" style="display:none; padding: 12px 20px; border-radius: 12px; border: none; background: linear-gradient(135deg, var(--lavender), #c4b5e3); color: var(--dark-wood); font-weight: 600; cursor: pointer; transition: all 0.3s;">🔄 Change Budget</button>
+                </div>
+                <div class="battle-report" id="battle-report">
+                    <h3>💰 Monthly Budget Control</h3>
+                    <p>👍 Great! Spent <span class="highlight">$0</span> this month (0%)</p>
+                    <p>Remaining: <span class="highlight">$3000</span> (100%)</p>
+                    <p>Keep it up, don't overspend! 💪</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 连击计数器 -->
+        <div class="combo-counter" id="combo-counter">🔥 3 COMBO!</div>
+
+        <!-- 宝箱弹窗 -->
+        <div class="loot-box-overlay" id="loot-box-overlay">
+            <div class="loot-box-container">
+                <div class="treasure-chest" id="treasure-chest">
+                    <div class="chest-lid"></div>
+                    <div class="chest-body">
+                        <div class="chest-lock"></div>
+                    </div>
+                </div>
+                <div class="reward-display" id="reward-display">
+                    <div class="reward-emoji" id="reward-emoji"></div>
+                    <div class="reward-rarity" id="reward-rarity"></div>
+                    <div class="reward-name" id="reward-name"></div>
+                    <div class="reward-description" id="reward-description"></div>
+                    <button class="claim-btn" id="claim-btn">Claim Reward</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 月度消费详情弹窗 -->
+        <div class="loot-box-overlay" id="monthly-expense-overlay" style="display: none;">
+            <div class="loot-box-container" style="max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px;">
+                    <h2 class="pixel-title" style="font-size: 16px;">📊 Monthly Expense Details</h2>
+                    <button id="close-monthly-btn" style="background: #c75050; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">✕ Close</button>
+                </div>
+                <div id="monthly-expense-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 用户认证状态
+        let currentUser = localStorage.getItem('garden_current_user') || null;
+        let users = JSON.parse(localStorage.getItem('garden_users')) || {};
+        
+        // 全局DOM元素引用
+        let loginOverlay, loginTab, registerTab, loginForm, registerForm, authError;
+
+        // Game state - New user defaults: 100 HP, Garden Level 1, others 0
+        let gameState = {
+            hp: 100, exp: 0, gold: 0, gardenLevel: 1,
+            combo: 0, maxCombo: 0, chestOpened: 0, petAccessory: '',
+            budget: {
+                maxBudget: 3000,
+                spent: 0,
+                locked: false,  // 预算是否锁定
+                lastSetDate: '' // 上次设置日期
+            },
+            dailyExpenses: [],  // 今日消费记录
+            monthlyExpenses: {}, // 月度消费记录 {日期: [{name, amount, mood}...]}
+            lastExpenseDate: '', // 上次消费日期
+            achievements: {
+                early_bird: false, saver: false, perfectionist: false,
+                treasure_hunter: false, combo_master: false, plant_parent: false
+            }
+        };
+
+        // Praise messages - displayed when all tasks are completed
+        const praiseMessages = [
+            '🌟 Amazing! You completed all today\'s tasks! You\'re super efficient!',
+            '🎉 Perfect! All tasks done, keep it up!',
+            '👏 Awesome! All tasks completed today, give yourself a big thumbs up!',
+            '💪 Excellent! You have completed all today\'s challenges!',
+            '✨ What a great day! All tasks done, full of accomplishment!',
+            '🎊 Today\'s tasks completed! You are so disciplined!',
+            '🏆 You are today\'s MVP! All tasks conquered!',
+            '🌈 Wonderful! All today\'s goals achieved!',
+            '💯 Perfect score! All tasks completed!',
+            '🔥 Unstoppable! All today\'s tasks done!',
+            '🎯 Precision achieved! All tasks completed!',
+            '⭐ Shining moment! All today\'s tasks completed!',
+            '💎 Precious day! All tasks completed!',
+            '🌞 Sunny day! All tasks done!',
+            '🦸 You are a superhero! All today\'s tasks completed!'
+        ];
+        
+        // 30-day streak messages
+        const streak30Messages = [
+            '🎊 Congratulations! You\'ve kept going for 30 days! What an amazing achievement!',
+            '🌟 30 days strong! You\'ve shown incredible perseverance! Keep it up!',
+            '🏅 30-day streak complete! You\'ve built great habits!',
+            '💪 30 days non-stop! Your dedication is inspiring!',
+            '🔥 30-day challenge conquered! You are truly powerful!',
+            '✨ 30 days of persistence shapes a better you!',
+            '🎁 30 days achieved! This dedication is the best gift!',
+            '🌈 30 days of effort will shine brightly!'
+        ];
+
+        // 页面加载完成后执行
+        window.addEventListener('load', function() {
+            initAuth();
+            initTaskClickHandler();
+        });
+
+        // 初始化认证系统
+        function initAuth() {
+            // 将元素引用保存到全局变量
+            loginOverlay = document.getElementById('login-overlay');
+            loginTab = document.getElementById('login-tab');
+            registerTab = document.getElementById('register-tab');
+            loginForm = document.getElementById('login-form');
+            registerForm = document.getElementById('register-form');
+            var loginBtn = document.getElementById('login-btn');
+            var registerBtn = document.getElementById('register-btn');
+            authError = document.getElementById('auth-error');
+
+            // 自动登录 - 如果已经登录过，直接进入游戏
+            if (currentUser && users[currentUser]) {
+                loadUserGameState();
+                loginOverlay.classList.add('hidden');
+                showUserInfo();
+                return;
+            }
+
+            // 切换登录/注册选项卡
+            loginTab.addEventListener('click', function() {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                authError.textContent = '';
+            });
+
+            registerTab.addEventListener('click', function() {
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                authError.textContent = '';
+            });
+
+            // 登录
+            loginBtn.addEventListener('click', function() {
+                var username = document.getElementById('login-username').value.trim();
+                var password = document.getElementById('login-password').value;
+
+                if (!username || !password) {
+                    authError.textContent = 'Please enter username and password';
+                    return;
+                }
+
+                if (users[username] && users[username].password === password) {
+                    currentUser = username;
+                    localStorage.setItem('garden_current_user', username);
+                    loadUserGameState();
+                    loginOverlay.classList.add('hidden');
+                    showUserInfo();
+                    showNotification('Welcome back, ' + username + '!');
+                } else {
+                    authError.textContent = 'Invalid username or password';
+                }
+            });
+
+            // 注册
+            registerBtn.addEventListener('click', function() {
+                var username = document.getElementById('register-username').value.trim();
+                var password = document.getElementById('register-password').value;
+                var password2 = document.getElementById('register-password2').value;
+
+                if (!username || !password || !password2) {
+                    authError.textContent = 'Please fill in all fields';
+                    return;
+                }
+
+                if (password !== password2) {
+                    authError.textContent = 'Passwords do not match';
+                    return;
+                }
+
+                if (users[username]) {
+                    authError.textContent = 'Username already exists';
+                    return;
+                }
+
+                // 创建新用户
+                users[username] = {
+                    password: password,
+                    gameState: JSON.parse(JSON.stringify(gameState)),
+                    tasks: getDefaultTasks(),
+                    lastTaskReset: new Date().toDateString()
+                };
+                localStorage.setItem('garden_users', JSON.stringify(users));
+                localStorage.setItem('garden_current_user', username);
+                currentUser = username;
+                loginOverlay.classList.add('hidden');
+                showUserInfo();
+                showNotification('Welcome to Mind Garden, ' + username + '!');
+                renderTasks();
+            });
+        }
+
+        // 显示用户信息和退出按钮
+        function showUserInfo() {
+            const userInfo = document.getElementById('user-info');
+            const usernameEl = document.getElementById('current-username');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            if (currentUser) {
+                usernameEl.textContent = currentUser;
+                userInfo.style.display = 'block';
+            }
+            
+            // 先移除之前的事件监听器
+            logoutBtn.removeEventListener('click', logoutHandler);
+            logoutBtn.addEventListener('click', logoutHandler);
+        }
+        
+        // 退出处理函数
+        function logoutHandler() {
+            if (confirm('Are you sure you want to logout?')) {
+                // 保存当前用户状态后退出
+                saveUserGameState();
+                localStorage.removeItem('garden_current_user');
+                currentUser = null;
+                // 重置游戏状态为初始值
+                gameState = {
+                    hp: 100, exp: 0, gold: 0, gardenLevel: 1,
+                    combo: 0, maxCombo: 0, chestOpened: 0, petAccessory: '',
+                    budget: {
+                        maxBudget: 3000,
+                        spent: 0,
+                        locked: false,
+                        lastSetDate: ''
+                    },
+                    dailyExpenses: [],
+                    monthlyExpenses: {},
+                    lastExpenseDate: '',
+                    achievements: {
+                        early_bird: false, saver: false, perfectionist: false,
+                        treasure_hunter: false, combo_master: false, plant_parent: false
+                    }
+                };
+                document.getElementById('user-info').style.display = 'none';
+                loginOverlay.classList.remove('hidden');
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+                document.getElementById('register-username').value = '';
+                document.getElementById('register-password').value = '';
+                document.getElementById('register-password2').value = '';
+                authError.textContent = '';
+                showNotification('Logged out successfully');
+                // 重新初始化登录/注册事件
+                initAuth();
+            }
+        }
+
+        // 加载用户游戏状态
+        function loadUserGameState() {
+            if (users[currentUser] && users[currentUser].gameState) {
+                gameState = JSON.parse(JSON.stringify(users[currentUser].gameState));
+                
+                // 兼容旧格式 - budgetBoss
+                if (gameState.budgetBoss) {
+                    gameState.budget = {
+                        maxBudget: gameState.budgetBoss.maxBudget || gameState.budgetBoss.maxHp || 3000,
+                        spent: gameState.budgetBoss.spent || (gameState.budgetBoss.maxHp - gameState.budgetBoss.currentHp) || 0,
+                        locked: gameState.budgetBoss.locked || false,
+                        lastSetDate: gameState.budgetBoss.lastSetDate || ''
+                    };
+                    delete gameState.budgetBoss;
+                }
+                
+                // 初始化缺失的字段
+                if (!gameState.budget) {
+                    gameState.budget = {
+                        maxBudget: 3000,
+                        spent: 0,
+                        locked: false,
+                        lastSetDate: ''
+                    };
+                }
+                if (!gameState.dailyExpenses) gameState.dailyExpenses = [];
+                if (!gameState.monthlyExpenses) gameState.monthlyExpenses = {};
+                if (!gameState.lastExpenseDate) gameState.lastExpenseDate = '';
+            } else {
+                // 如果没有保存的状态，使用默认初始状态
+                gameState = {
+                    hp: 100, exp: 0, gold: 0, gardenLevel: 1,
+                    combo: 0, maxCombo: 0, chestOpened: 0, petAccessory: '',
+                    budget: {
+                        maxBudget: 3000,
+                        spent: 0,
+                        locked: false,
+                        lastSetDate: ''
+                    },
+                    dailyExpenses: [],
+                    monthlyExpenses: {},
+                    lastExpenseDate: '',
+                    achievements: {
+                        early_bird: false, saver: false, perfectionist: false,
+                        treasure_hunter: false, combo_master: false, plant_parent: false
+                    }
+                };
+            }
+            
+            // 更新UI显示
+            updateStatus();
+            updateBattleReport();
+            
+            // Check if tasks need reset (new day)
+            checkTaskReset();
+            renderTasks();
+            renderDiaries();
+            
+            // Check and reset daily expenses, render today's expense records
+            checkDailyExpenseReset();
+            renderDailyExpenses();
+            
+            // 初始化月度消费详情弹窗
+            initMonthlyExpenseView();
+        }
+        
+        // Render today's expense records
+        function renderDailyExpenses() {
+            const expenseList = document.getElementById('expense-list');
+            if (!expenseList) return;
+            
+            const today = new Date().toDateString();
+            
+            // 如果不是今天的记录，清空显示但保留数据
+            if (gameState.lastExpenseDate !== today) {
+                expenseList.innerHTML = '';
+                return;
+            }
+            
+            const moodEmojis = { happy: '😊', sad: '😢', anxious: '😰', excited: '🤩', neutral: '😐' };
+            
+            // 清空并重新渲染
+            expenseList.innerHTML = '';
+            
+            // No expense records today
+            if (gameState.dailyExpenses.length === 0) {
+                expenseList.innerHTML = '<p style="text-align: center; color: var(--wood); padding: 20px;">No expense records today</p>';
+                return;
+            }
+            
+            // 倒序显示（最新的在最上面）
+            [...gameState.dailyExpenses].reverse().forEach(expense => {
+                const expenseItem = document.createElement('div');
+                expenseItem.className = 'expense-item';
+                expenseItem.dataset.expenseId = expense.id;
+                expenseItem.innerHTML = `
+                    <div class="expense-info">
+                        <span class="expense-emoji">${getExpenseEmoji(expense.name)}</span>
+                        <div class="expense-details">
+                            <h4>${expense.name}</h4>
+                            <p>${expense.time} · ${moodEmojis[expense.mood]} ${getMoodText(expense.mood)}</p>
+                        </div>
+                    </div>
+                    <span class="expense-amount">-${expense.amount.toFixed(2)}</span>
+                `;
+                expenseList.appendChild(expenseItem);
+            });
+        }
+        
+        // 检查并重置每日消费
+        function checkDailyExpenseReset() {
+            const today = new Date().toDateString();
+            // Reset daily expenses if date changed (keep monthly records)
+            if (gameState.lastExpenseDate !== today) {
+                gameState.dailyExpenses = [];
+                gameState.lastExpenseDate = today;
+                
+                // 保存状态
+                saveUserGameState();
+            }
+        }
+
+        // Check if tasks need reset
+        function checkTaskReset() {
+            const today = new Date().toDateString();
+            const lastReset = users[currentUser].lastTaskReset;
+            
+            // Only check yesterday's task completion if last reset date exists and date has changed
+            if (lastReset && lastReset !== today) {
+                // Check if there are unfinished tasks from yesterday, deduct HP if so
+                // Only deduct HP for user-created unfinished tasks
+                if (users[currentUser].tasks && users[currentUser].tasks.length > 0) {
+                    const totalTasks = users[currentUser].tasks.length;
+                    const completedTasks = users[currentUser].tasks.filter(task => task.completed).length;
+                    
+                    // 如果完成了所有用户设计的任务，则不扣血
+                    if (completedTasks < totalTasks) {
+                        const uncompletedCount = totalTasks - completedTasks;
+                        const damage = 5; // 无论未完成几个任务，总共扣5滴血
+                        gameState.hp = Math.max(0, gameState.hp - damage);
+                        showNotification(`💔 ${uncompletedCount} task(s) unfinished yesterday, ${damage} HP deducted!`);
+                    }
+                }
+            }
+            
+            // 如果是新的一天（或第一次使用），重置所有任务
+            if (!lastReset || lastReset !== today) {
+                if (users[currentUser].tasks) {
+                    users[currentUser].tasks.forEach(task => task.completed = false);
+                }
+                users[currentUser].completedTaskCount = 0;
+                users[currentUser].lastTaskReset = today;
+                saveUserGameState();
+            }
+        }
+
+        // 添加任务
+        function addTask(text, reward = 15) {
+            // Max EXP reward is 30
+            if (reward > 30) {
+                showNotification('Max EXP is 30');
+                return false;
+            }
+            
+            // 获取已完成的任务数量
+            const completedCount = users[currentUser].completedTaskCount || 0;
+            
+            // 每天最多完成10个任务
+            if (completedCount >= 10) {
+                showNotification('Daily task limit reached');
+                return false;
+            }
+            
+            // 当前任务列表数量限制（最多10个任务）
+            const currentTasks = users[currentUser].tasks || [];
+            const maxTasks = 10;
+            
+            if (currentTasks.length >= maxTasks) {
+                showNotification(`Task limit reached (max ${maxTasks})`);
+                return false;
+            }
+            
+            const newTask = {
+                id: Date.now(),
+                text: text,
+                reward: reward,
+                completed: false
+            };
+            
+            currentTasks.push(newTask);
+            users[currentUser].tasks = currentTasks;
+            saveUserGameState();
+            renderTasks();
+            showNotification('Task added successfully!');
+            return true;
+        }
+
+        // 保存用户游戏状态
+        function saveUserGameState() {
+            if (currentUser && users[currentUser]) {
+                users[currentUser].gameState = JSON.parse(JSON.stringify(gameState));
+                // 确保任务列表也被保存
+                if (users[currentUser].tasks) {
+                    users[currentUser].tasks = JSON.parse(JSON.stringify(users[currentUser].tasks));
+                }
+                localStorage.setItem('garden_users', JSON.stringify(users));
+            }
+        }
+
+        // 自动保存（每30秒）
+        setInterval(saveUserGameState, 30000);
+
+        // DOM元素（延迟到使用时获取，确保DOM已加载）
+        function getElement(id) {
+            return document.getElementById(id);
+        }
+        
+        const hpValue = getElement('hp-value');
+        const expValue = getElement('exp-value');
+        const goldValue = getElement('gold-value');
+        const gardenValue = getElement('garden-value');
+        const pet = getElement('pet');
+        const petMouth = getElement('pet-mouth');
+        const diaryContent = getElement('diary-content');
+        const lootBoxOverlay = getElement('loot-box-overlay');
+        const treasureChest = getElement('treasure-chest');
+        const rewardDisplay = getElement('reward-display');
+        const rewardEmoji = getElement('reward-emoji');
+        const rewardRarity = getElement('reward-rarity');
+        const rewardName = getElement('reward-name');
+        const rewardDescription = getElement('reward-description');
+        const claimBtn = getElement('claim-btn');
+        const comboCounter = getElement('combo-counter');
+        const battleReport = getElement('battle-report');
+        const petAccessory = getElement('pet-accessory');
+        const budgetInput = getElement('budget-input');
+        const setBudgetBtn = getElement('set-budget-btn');
+
+        // 更新状态
+        function updateStatus() {
+            hpValue.textContent = gameState.hp;
+            expValue.textContent = gameState.exp;
+            goldValue.textContent = gameState.gold;
+            gardenValue.textContent = gameState.gardenLevel;
+        }
+
+        // Reward pool - Extended version
+        const rewardPool = {
+            common: [
+                { emoji: '🍎', name: 'Gold', desc: 'Gain 20 Gold', effect: { gold: 20 } },
+                { emoji: '⭐', name: 'EXP', desc: 'Gain 15 EXP', effect: { exp: 15 } },
+                { emoji: '💧', name: 'Water', desc: 'Garden gets watered', effect: { garden: 'water' } },
+                { emoji: '☀️', name: 'Sunshine', desc: 'Garden gets sunshine', effect: { garden: 'sunshine' } },
+                { emoji: '🌱', name: 'Seed', desc: 'Gain a seed', effect: { seed: 1 } },
+                { emoji: '🍃', name: 'Fertilizer', desc: 'Garden gets fertilizer', effect: { garden: 'fertilizer' } }
+            ],
+            rare: [
+                { emoji: '💎', name: 'Gem', desc: 'Gain 50 Gold', effect: { gold: 50 } },
+                { emoji: '🧢', name: 'Hat', desc: 'Pet wears a hat', effect: { accessory: 'hat' } },
+                { emoji: '🕶️', name: 'Sunglasses', desc: 'Pet wears sunglasses', effect: { accessory: 'sunglasses' } },
+                { emoji: '🎀', name: 'Bow', desc: 'Pet wears a bow', effect: { accessory: 'bowtie' } },
+                { emoji: '🏆', name: 'Trophy', desc: 'Gain 30 EXP', effect: { exp: 30 } },
+                { emoji: '🎁', name: 'Gift', desc: 'Gain 40 Gold', effect: { gold: 40 } },
+                { emoji: '🌈', name: 'Rainbow', desc: 'Rainbow appears in garden', effect: { garden: 'rainbow' } }
+            ],
+            legendary: [
+                { emoji: '👑', name: 'Crown', desc: 'Gain 100 Gold + 50 EXP', effect: { gold: 100, exp: 50 } },
+                { emoji: '🌟', name: 'Star', desc: 'Gain 100 EXP', effect: { exp: 100 } },
+                { emoji: '💫', name: 'Stardust', desc: 'Gain 80 Gold + 80 EXP', effect: { gold: 80, exp: 80 } },
+                { emoji: '🦄', name: 'Unicorn', desc: 'Legendary blessing', effect: { exp: 150, gold: 60 } },
+                { emoji: '✨', name: 'Magic', desc: 'Mystical reward', effect: { exp: 70, gold: 70 } }
+            ],
+            special: [
+                { emoji: '📖', name: '心灵鸡汤', desc: '今天也要加油哦！', type: 'quote' },
+                { emoji: '😈', name: '毒鸡汤', desc: '努力不一定成功，但不努力一定很轻松', type: 'quote' },
+                { emoji: '💡', name: '灵感', desc: '明天会更好！', type: 'quote' },
+                { emoji: '🌙', name: '晚安', desc: '好好休息，明天继续战斗！', type: 'quote' }
+            ]
+        };
+
+        // 花园状态
+        let gardenState = {
+            waterLevel: 50,
+            sunshineLevel: 50,
+            plantGrowth: 3,
+            weather: 'sunny',
+            unlockedFeatures: []  // 解锁的装饰/功能
+        };
+
+        // User inventory (stores collected items)
+        let userInventory = {
+            accessories: [],  // 装饰物品
+            consumables: []   // 消耗品
+        };
+
+        // 打开宝箱
+        function openLootBox() {
+            lootBoxOverlay.style.display = 'flex';
+            rewardDisplay.style.display = 'none';
+            treasureChest.classList.remove('opening');
+        }
+
+        // 点击宝箱
+        treasureChest.addEventListener('click', () => {
+            treasureChest.classList.add('opening');
+            setTimeout(() => {
+                const reward = drawReward();
+                displayReward(reward);
+            }, 600);
+        });
+
+        // 抽卡 - 增强版
+        function drawReward() {
+            const rand = Math.random();
+            let rarity, pool;
+            const comboBonus = Math.min(gameState.combo * 0.02, 0.1);
+            
+            // 幸运符效果：必出稀有或传说
+            if (luckyCharmActive) {
+                luckyCharmActive = false;
+                rarity = Math.random() < 0.7 ? 'rare' : 'legendary';
+            } else if (rand < 0.65 - comboBonus) {
+                rarity = 'common';
+            } else if (rand < 0.92 - comboBonus) {
+                rarity = 'rare';
+            } else {
+                rarity = 'legendary';
+            }
+            
+            pool = rewardPool[rarity];
+            const reward = pool[Math.floor(Math.random() * pool.length)];
+            if (Math.random() < 0.05) {
+                const specialPool = rewardPool.special;
+                return { ...specialPool[Math.floor(Math.random() * specialPool.length)], rarity: 'special' };
+            }
+            return { ...reward, rarity };
+        }
+
+        // Display reward
+        function displayReward(reward) {
+            rewardDisplay.style.display = 'block';
+            rewardEmoji.textContent = reward.emoji;
+            rewardName.textContent = reward.name;
+            rewardDescription.textContent = reward.desc;
+            rewardRarity.textContent = reward.rarity === 'common' ? 'Common' : reward.rarity === 'rare' ? 'Rare' : 'Legendary';
+            rewardRarity.className = `reward-rarity ${reward.rarity}`;
+            claimBtn.dataset.reward = JSON.stringify(reward);
+        }
+
+        // 领取奖励
+        claimBtn.addEventListener('click', () => {
+            const reward = JSON.parse(claimBtn.dataset.reward);
+            
+            // 处理奖励效果
+            if (reward.effect) {
+                if (reward.effect.gold) {
+                    gameState.gold += reward.effect.gold;
+                    showCoinDrop();
+                }
+                if (reward.effect.exp) gameState.exp += reward.effect.exp;
+                if (reward.effect.accessory) {
+                    // Add accessory to inventory instead of auto-equipping
+                    addToInventory('accessories', reward.effect.accessory);
+                    showNotification(`🎁 Obtained accessory: ${getAccessoryName(reward.effect.accessory)}! Added to backpack`);
+                    renderInventory();
+                }
+                if (reward.effect.garden) {
+                    applyGardenEffect(reward.effect.garden);
+                }
+            }
+            
+            gameState.chestOpened++;
+            updateStatus();
+            lootBoxOverlay.style.display = 'none';
+            
+            // Show reward notification
+            if (reward.type === 'quote') {
+                showNotification(`${reward.emoji} ${reward.desc}`);
+            } else if (!reward.effect?.accessory) {
+                showNotification(`🎉 Got ${reward.emoji} ${reward.name}!`);
+            }
+        });
+
+        // 金币掉落效果
+        function showCoinDrop() {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const coin = document.createElement('div');
+                    coin.style.cssText = `
+                        position: fixed; font-size: 30px;
+                        animation: coinFall 0.5s ease-out forwards;
+                        pointer-events: none; z-index: 1000;
+                        left: ${(Math.random() * 80 + 10)}%;
+                    `;
+                    coin.textContent = '💰';
+                    document.body.appendChild(coin);
+                    setTimeout(() => coin.remove(), 600);
+                }, i * 100);
+            }
+        }
+
+        // 应用花园效果
+        function applyGardenEffect(effect) {
+            switch(effect) {
+                case 'water':
+                    gardenState.waterLevel = Math.min(100, gardenState.waterLevel + 20);
+                    showWaterDropEffect();
+                    showNotification('💧 花园获得滋润！');
+                    break;
+                case 'sunshine':
+                    gardenState.sunshineLevel = Math.min(100, gardenState.sunshineLevel + 25);
+                    document.getElementById('sun').classList.add('sunny');
+                    sunShineEffect();
+                    showNotification('☀️ 阳光照耀花园！');
+                    break;
+                case 'fertilizer':
+                    gardenState.plantGrowth = Math.min(5, gardenState.plantGrowth + 1);
+                    growPlantEffect();
+                    showNotification('🌿 植物茁壮成长！');
+                    break;
+                case 'rainbow':
+                    showRainbow();
+                    showNotification('🌈 花园出现彩虹！');
+                    break;
+            }
+        }
+
+        // 水滴效果
+        function showWaterDropEffect() {
+            const garden = document.getElementById('garden');
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const drop = document.createElement('div');
+                    drop.textContent = '💧';
+                    drop.style.cssText = `
+                        position: absolute;
+                        font-size: 20px;
+                        animation: rain 0.8s ease-in forwards;
+                        pointer-events: none;
+                        left: ${Math.random() * 80 + 10}%;
+                        top: -30px;
+                    `;
+                    garden.appendChild(drop);
+                    setTimeout(() => drop.remove(), 1000);
+                }, i * 100);
+            }
+        }
+
+        // 阳光效果
+        function sunShineEffect() {
+            const sun = document.getElementById('sun');
+            sun.style.boxShadow = '0 0 30px var(--warm-sun), 0 0 50px #FFD700, 0 0 70px #FFA500';
+            setTimeout(() => {
+                sun.style.boxShadow = '0 0 30px var(--warm-sun)';
+            }, 3000);
+        }
+
+        // 植物生长效果
+        function growPlantEffect() {
+            const plant = document.getElementById('main-plant');
+            plant.style.transform = 'scale(1.1)';
+            plant.style.transition = 'transform 0.5s ease';
+            setTimeout(() => {
+                plant.style.transform = 'scale(1)';
+            }, 500);
+            // 增加花朵数量
+            const flower = plant.querySelector('.plant-flower');
+            if (flower && gardenState.plantGrowth >= 4) {
+                flower.innerHTML += '<div class="flower-petal"></div>';
+            }
+        }
+
+        // 彩虹效果
+        function showRainbow() {
+            const garden = document.getElementById('garden');
+            if (document.querySelector('.rainbow')) return;
+            
+            const rainbow = document.createElement('div');
+            rainbow.className = 'rainbow';
+            rainbow.style.cssText = `
+                position: absolute;
+                width: 300px;
+                height: 150px;
+                top: 50px;
+                right: 50px;
+                background: linear-gradient(135deg, 
+                    violet 0%, indigo 14%, blue 28%, 
+                    green 42%, yellow 57%, orange 71%, red 85%);
+                border-radius: 150px 150px 0 0;
+                opacity: 0.7;
+                animation: fadeIn 0.5s ease;
+                pointer-events: none;
+            `;
+            garden.appendChild(rainbow);
+            setTimeout(() => {
+                rainbow.style.animation = 'fadeOut 1s ease';
+                setTimeout(() => rainbow.remove(), 1000);
+            }, 5000);
+        }
+
+        // 装备装饰
+        function equipAccessory(type) {
+            // If already wearing an accessory, put it back in inventory first
+            if (gameState.petAccessory) {
+                addToInventory('accessories', gameState.petAccessory);
+            }
+            gameState.petAccessory = type;
+            const emojis = { hat: '🧢', sunglasses: '🕶️', bowtie: '🎀' };
+            petAccessory.textContent = emojis[type];
+            petAccessory.className = `pet-accessory accessory-${type}`;
+            // 从背包中移除
+            removeFromInventory('accessories', type);
+            showNotification(`✨ Equipped ${emojis[type]}!`);
+            // 更新背包UI
+            renderInventory();
+        }
+
+        // Unequip accessory
+        function unequipAccessory() {
+            if (!gameState.petAccessory) {
+                showNotification('No accessory equipped');
+                return;
+            }
+            const emojis = { hat: '🧢', sunglasses: '🕶️', bowtie: '🎀' };
+            showNotification(`📦 Stored ${emojis[gameState.petAccessory]} in backpack`);
+            addToInventory('accessories', gameState.petAccessory);
+            gameState.petAccessory = '';
+            petAccessory.textContent = '';
+            petAccessory.className = 'pet-accessory';
+            renderInventory();
+        }
+
+        // Add to inventory
+        function addToInventory(type, item) {
+            if (!userInventory[type]) {
+                userInventory[type] = [];
+            }
+            if (!userInventory[type].includes(item)) {
+                userInventory[type].push(item);
+            }
+        }
+
+        // 从背包移除
+        function removeFromInventory(type, item) {
+            if (!userInventory[type]) return;
+            const index = userInventory[type].indexOf(item);
+            if (index > -1) {
+                userInventory[type].splice(index, 1);
+            }
+        }
+
+        // 渲染背包UI
+        function renderInventory() {
+            const inventoryContainer = document.getElementById('inventory-container');
+            if (!inventoryContainer) return;
+
+            const accessories = userInventory.accessories || [];
+            const equipped = gameState.petAccessory;
+            const emojis = { hat: '🧢', sunglasses: '🕶️', bowtie: '🎀' };
+
+            let html = '<h3 style="font-family: \'Press Start 2P\', cursive; font-size: 10px; color: var(--dark-wood); margin-bottom: 10px;">🎒 My Backpack</h3>';
+            
+            // Equipped items
+            html += '<div style="margin-bottom: 15px;">';
+            html += '<p style="font-size: 12px; color: var(--wood); margin-bottom: 5px;">Equipped:</p>';
+            if (equipped) {
+                html += `
+                    <div style="display: flex; align-items: center; gap: 10px; background: var(--mint); padding: 10px; border-radius: 8px;">
+                        <span style="font-size: 24px;">${emojis[equipped]}</span>
+                        <span style="font-size: 13px;">${getAccessoryName(equipped)}</span>
+                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="unequipAccessory()">卸下</button>
+                    </div>
+                `;
+            } else {
+                html += '<p style="color: var(--wood); font-size: 12px;">Nothing equipped</p>';
+            }
+            html += '</div>';
+
+            // Inventory items
+            html += '<div>';
+            html += '<p style="font-size: 12px; color: var(--wood); margin-bottom: 5px;">Inventory:</p>';
+            if (accessories.length > 0) {
+                html += '<div style="display: flex; flex-wrap: gap: 10px;">';
+                accessories.forEach(acc => {
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 8px; background: var(--sand); padding: 8px 12px; border-radius: 8px; margin-bottom: 5px;">
+                            <span style="font-size: 20px;">${emojis[acc]}</span>
+                            <span style="font-size: 12px;">${getAccessoryName(acc)}</span>
+                            <button class="btn" style="padding: 3px 8px; font-size: 11px;" onclick="equipAccessory('${acc}')">装备</button>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            } else {
+                html += '<p style="color: var(--wood); font-size: 12px;">Inventory is empty</p>';
+            }
+            html += '</div>';
+
+            inventoryContainer.innerHTML = html;
+        }
+
+        // Get accessory name
+        function getAccessoryName(type) {
+            const names = { hat: 'Hat', sunglasses: 'Sunglasses', bowtie: 'Bow Tie' };
+            return names[type] || type;
+        }
+
+        // Unlock garden features on level up
+        function unlockGardenFeatures(level) {
+            const unlocks = {
+                2: { feature: 'butterfly', desc: '🦋 Butterflies appeared in the garden!' },
+                3: { feature: 'bee', desc: '🐝 Bees come to collect nectar!' },
+                4: { feature: 'mushroom', desc: '🍄 Mushrooms grew in the garden!' },
+                5: { feature: 'rainbow', desc: '🌈 Rainbow effect unlocked!' },
+                6: { feature: 'double_flower', desc: '🌸 Flowers became more beautiful!' },
+                7: { feature: 'larger_tree', desc: '🌳 Trees grew stronger!' },
+                8: { feature: 'sparkles', desc: '✨ Garden sparkles!' }
+            };
+
+            const unlock = unlocks[level];
+            if (unlock && !gardenState.unlockedFeatures.includes(unlock.feature)) {
+                gardenState.unlockedFeatures.push(unlock.feature);
+                showNotification(unlock.desc);
+            }
+        }
+
+        // 更新花园视觉效果
+        function updateGardenVisuals() {
+            const garden = document.getElementById('garden');
+            const plant = document.getElementById('main-plant');
+            const tree = document.getElementById('big-tree');
+            const sun = document.getElementById('sun');
+            const pet = document.getElementById('pet');
+
+            // 根据等级改变花园背景 - 柔和清新的渐变色
+            const gradients = [
+                'linear-gradient(180deg, #B8D4E3 0%, #D5E8D4 50%, #A8D8B9 100%)',  // lvl 1: 天空蓝→清新草绿
+                'linear-gradient(180deg, #B3E5FC 0%, #C8E6C9 50%, #A5D6A7 100%)',  // lvl 2: 浅蓝→薄荷绿
+                'linear-gradient(180deg, #E1F5FE 0%, #E8F5E9 50%, #C8E6C9 100%)',  // lvl 3: 冰蓝→嫩绿
+                'linear-gradient(180deg, #E3F2FD 0%, #F3E5F5 50%, #CE93D8 100%)',  // lvl 4: 淡蓝→薰衣草紫
+                'linear-gradient(180deg, #FCE4EC 0%, #F8BBD9 50%, #F48FB1 100%)',  // lvl 5: 浪漫粉
+                'linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 50%, #81C784 100%)',  // lvl 6: 清新深绿
+                'linear-gradient(180deg, #FFF3E0 0%, #FFE0B2 50%, #FFCC80 100%)',  // lvl 7: 温暖橙
+                'linear-gradient(180deg, #E1F5FE 0%, #F3E5F5 50%, #E8F5E9 100%)',  // lvl 8: 梦幻渐变
+            ];
+
+            const gradientIndex = Math.min(gameState.gardenLevel - 1, gradients.length - 1);
+            garden.style.background = gradients[gradientIndex];
+            garden.style.transition = 'background 1.5s ease';
+
+            // 植物生长效果（保持适中）
+            const growthScale = 1 + (gameState.gardenLevel - 1) * 0.12;
+            plant.style.transform = `scale(${growthScale})`;
+            plant.style.transition = 'transform 0.8s ease';
+
+            // 花朵颜色变化
+            updateFlowerColor();
+
+            // 树木生长效果
+            const treeScale = 1 + (gameState.gardenLevel - 1) * 0.1;
+            tree.style.transform = `scale(${treeScale})`;
+            tree.style.transition = 'transform 0.8s ease';
+
+            // 太阳发光效果 - 柔和
+            const sunGlow = gameState.gardenLevel >= 5 ? '0 0 20px var(--warm-sun), 0 0 30px rgba(255, 215, 0, 0.4)' : '0 0 15px var(--warm-sun)';
+            sun.style.boxShadow = sunGlow;
+            sun.style.transition = 'box-shadow 0.5s ease';
+
+            // 宠物大小变化
+            const petScale = 1 + (gameState.gardenLevel - 1) * 0.06;
+            pet.style.transform = `translateX(-50%) scale(${petScale})`;
+            pet.style.transition = 'transform 0.8s ease';
+
+            // Add sparkle effects (Level 8)
+            if (gameState.gardenLevel >= 8) {
+                addSparkles();
+            }
+
+            // Add garden decorations
+            addGardenDecorations();
+        }
+
+        // 更新树木颜色
+        function updateTreeColor() {
+            const treeTrunk = document.querySelector('.tree-trunk');
+            const treeCircles = document.querySelectorAll('.tree-circle');
+
+            const trunkColors = [
+                'linear-gradient(to right, #5D4037, #795548, #5D4037)',  // lvl 1
+                'linear-gradient(to right, #6D4C41, #8D6E63, #6D4C41)',  // lvl 2
+                'linear-gradient(to right, #795548, #9E9E9E, #795548)',  // lvl 3
+                'linear-gradient(to right, #8D6E63, #BDBDBD, #8D6E63)',  // lvl 4
+                'linear-gradient(to right, #7B1FA2, #9C27B0, #7B1FA2)',  // lvl 5
+                'linear-gradient(to right, #FF8F00, #FFA000, #FF8F00)',  // lvl 6
+                'linear-gradient(to right, #E91E63, #F06292, #E91E63)',  // lvl 7
+                'linear-gradient(to right, #FFD700, #FFECB3, #FFD700)',  // lvl 8
+            ];
+
+            const crownColors = [
+                'linear-gradient(to bottom, #1B5E20, #388E3C)',  // lvl 1
+                'linear-gradient(to bottom, #2E7D32, #43A047)',  // lvl 2
+                'linear-gradient(to bottom, #388E3C, #66BB6A)',  // lvl 3
+                'linear-gradient(to bottom, #00897B, #26A69A)',  // lvl 4
+                'linear-gradient(to bottom, #7B1FA2, #AB47BC)',  // lvl 5
+                'linear-gradient(to bottom, #FF8F00, #FFB300)',  // lvl 6
+                'linear-gradient(to bottom, #E91E63, #F48FB1)',  // lvl 7
+                'linear-gradient(to bottom, #FFD700, #FFEE58)',  // lvl 8
+            ];
+
+            const colorIndex = Math.min(gameState.gardenLevel - 1, trunkColors.length - 1);
+
+            if (treeTrunk) {
+                treeTrunk.style.background = trunkColors[colorIndex];
+            }
+            treeCircles.forEach(circle => {
+                circle.style.background = crownColors[colorIndex];
+            });
+        }
+
+        // 更新花朵颜色
+        function updateFlowerColor() {
+            const petals = document.querySelectorAll('.flower-petal');
+            const center = document.querySelector('.flower-center');
+            
+            // 优雅柔和的花朵配色
+            const colors = [
+                { petal: 'linear-gradient(to top, #F8BBD9, #F48FB1)', center: 'radial-gradient(circle, #FFF9C4, #FFD54F)' },  // lvl 1: 温柔粉
+                { petal: 'linear-gradient(to top, #C8E6C9, #81C784)', center: 'radial-gradient(circle, #E8F5E9, #66BB6A)' },  // lvl 2: 清新绿
+                { petal: 'linear-gradient(to top, #BBDEFB, #64B5F6)', center: 'radial-gradient(circle, #E3F2FD, #42A5F5)' },  // lvl 3: 天空蓝
+                { petal: 'linear-gradient(to top, #EDE7F6, #BA68C8)', center: 'radial-gradient(circle, #F3E5F5, #9C27B0)' },  // lvl 4: 薰衣草紫
+                { petal: 'linear-gradient(to top, #FCE4EC, #EC407A)', center: 'radial-gradient(circle, #FFF9C4, #E91E63)' },  // lvl 5: 玫瑰红
+                { petal: 'linear-gradient(to top, #B2DFDB, #4DB6AC)', center: 'radial-gradient(circle, #E0F2F1, #26A69A)' },  // lvl 6: 松石绿
+                { petal: 'linear-gradient(to top, #FFE0B2, #FF9800)', center: 'radial-gradient(circle, #FFF8E1, #FF8F00)' },  // lvl 7: 暖橙
+                { petal: 'linear-gradient(to top, #CE93D8, #AB47BC)', center: 'radial-gradient(circle, #F3E5F5, #7B1FA2)' },  // lvl 8: 深紫
+            ];
+
+            const colorIndex = Math.min(gameState.gardenLevel - 1, colors.length - 1);
+            const colorSet = colors[colorIndex];
+
+            petals.forEach(petal => {
+                petal.style.background = colorSet.petal;
+            });
+            if (center) {
+                center.style.background = colorSet.center;
+            }
+        }
+
+        // 更新树木颜色
+        function updateTreeColor() {
+            const treeTrunk = document.querySelector('.tree-trunk');
+            const treeCircles = document.querySelectorAll('.tree-circle');
+
+            const trunkColors = [
+                'linear-gradient(to right, #6D4C41, #8D6E63, #6D4C41)',  // lvl 1: 原木色
+                'linear-gradient(to right, #795548, #9E9E9E, #795548)',  // lvl 2: 浅棕色
+                'linear-gradient(to right, #8D6E63, #BDBDBD, #8D6E63)',  // lvl 3: 灰褐色
+                'linear-gradient(to right, #795548, #A1887F, #795548)',  // lvl 4: 玫瑰木色
+                'linear-gradient(to right, #6D4C41, #8D6E63, #6D4C41)',  // lvl 5: 原木色
+                'linear-gradient(to right, #795548, #9E9E9E, #795548)',  // lvl 6: 浅棕色
+                'linear-gradient(to right, #8D6E63, #BDBDBD, #8D6E63)',  // lvl 7: 灰褐色
+                'linear-gradient(to right, #795548, #A1887F, #795548)',  // lvl 8: 玫瑰木色
+            ];
+
+            const crownColors = [
+                'linear-gradient(to bottom, #2E7D32, #4CAF50)',  // lvl 1: 深绿
+                'linear-gradient(to bottom, #388E3C, #66BB6A)',  // lvl 2: 翠绿
+                'linear-gradient(to bottom, #43A047, #81C784)',  // lvl 3: 浅绿
+                'linear-gradient(to bottom, #2E7D32, #4CAF50)',  // lvl 4: 深绿
+                'linear-gradient(to bottom, #7B1FA2, #AB47BC)',  // lvl 5: 紫色
+                'linear-gradient(to bottom, #FF8F00, #FFB300)',  // lvl 6: 金色
+                'linear-gradient(to bottom, #E91E63, #F48FB1)',  // lvl 7: 粉色
+                'linear-gradient(to bottom, #FFD700, #FFEE58)',  // lvl 8: 金色
+            ];
+
+            const colorIndex = Math.min(gameState.gardenLevel - 1, trunkColors.length - 1);
+
+            if (treeTrunk) {
+                treeTrunk.style.background = trunkColors[colorIndex];
+            }
+            treeCircles.forEach(circle => {
+                circle.style.background = crownColors[colorIndex];
+            });
+        }
+
+        // 添加花园装饰物
+        function addGardenDecorations() {
+            const garden = document.getElementById('garden');
+
+            // 先移除所有旧的装饰物，确保重新渲染
+            document.querySelectorAll('.decoration-item').forEach(el => el.remove());
+
+            // Level 3: Add a bird in the sky
+            if (gameState.gardenLevel >= 3) {
+                const bird = document.createElement('div');
+                bird.className = 'decoration-item bird';
+                bird.innerHTML = `<div style="position:absolute;top:75px;left:28%;font-size:14px;opacity:0.8;">🐦</div>`;
+                garden.appendChild(bird);
+            }
+        }
+
+        // Add sparkle effects (simplified)
+        function addSparkles() {
+            // 移除旧的闪光
+            document.querySelectorAll('.sparkles').forEach(el => el.remove());
+            
+            const sparkles = document.createElement('div');
+            sparkles.className = 'sparkles';
+            sparkles.style.cssText = `
+                position: absolute; width: 100%; height: 100%; pointer-events: none;
+                overflow: hidden;
+            `;
+            for (let i = 0; i < 8; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.textContent = ['✨', '⭐'][Math.floor(Math.random() * 2)];
+                sparkle.style.cssText = `
+                    position: absolute;
+                    font-size: ${10 + Math.random() * 10}px;
+                    left: ${Math.random() * 90 + 5}%;
+                    top: ${Math.random() * 80 + 10}%;
+                    animation: sparkle 3s ease-in-out infinite;
+                    animation-delay: ${Math.random() * 3}s;
+                    opacity: 0.7;
+                `;
+                sparkles.appendChild(sparkle);
+            }
+            document.getElementById('garden').appendChild(sparkles);
+        }
+
+        // Level up celebration animation
+        function showLevelUpAnimation() {
+            const garden = document.getElementById('garden');
+            
+            // 烟花效果
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    const emojis = ['🎆', '🎉', '✨', '⭐', '🌟', '💫', '🎊'];
+                    firework.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    firework.style.cssText = `
+                        position: absolute;
+                        font-size: ${20 + Math.random() * 20}px;
+                        left: ${Math.random() * 80 + 10}%;
+                        top: 50%;
+                        animation: fireworkBurst 1s ease-out forwards;
+                        pointer-events: none;
+                        z-index: 100;
+                    `;
+                    garden.appendChild(firework);
+                    setTimeout(() => firework.remove(), 1000);
+                }, i * 100);
+            }
+
+            // 花园震动效果
+            garden.style.animation = 'gardenShake 0.5s ease-in-out';
+            setTimeout(() => {
+                garden.style.animation = '';
+            }, 500);
+
+            // 宠物跳跃庆祝
+            const pet = document.getElementById('pet');
+            pet.classList.add('pet-excited');
+        }
+
+        // 显示通知（支持堆叠）
+        let notificationCount = 0;
+        function showNotification(msg) {
+            const notification = document.createElement('div');
+            const currentOffset = notificationCount * 60; // 每个通知间隔60px
+            notification.style.cssText = `
+                position: fixed; top: ${20 + currentOffset}px; left: 50%; transform: translateX(-50%);
+                background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(50,50,50,0.9));
+                color: white; padding: 15px 30px; border-radius: 12px; z-index: 1000;
+                animation: fadeIn 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                border: 1px solid rgba(255,255,255,0.2);
+                font-size: 14px; white-space: nowrap;
+            `;
+            notification.textContent = msg;
+            document.body.appendChild(notification);
+            notificationCount++;
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => {
+                    notification.remove();
+                    notificationCount--;
+                    // 调整剩余通知的位置
+                    document.querySelectorAll('div[style*="position: fixed; top:"]').forEach((notif, index) => {
+                        notif.style.top = `${20 + index * 60}px`;
+                    });
+                }, 300);
+            }, 2500);
+        }
+
+        // 显示连击
+        function showCombo(count) {
+            if (count >= 3) {
+                comboCounter.textContent = `🔥 ${count} COMBO!`;
+                comboCounter.style.display = 'block';
+                setTimeout(() => comboCounter.style.display = 'none', 2000);
+            }
+        }
+
+
+
+        // Get default tasks - empty list, users need to add their own
+        function getDefaultTasks() {
+            return [];
+        }
+
+        // 渲染任务列表
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            if (!taskList) return;
+            const tasks = users[currentUser].tasks || getDefaultTasks();
+            taskList.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `task-item ${task.completed ? 'completed' : ''}`;
+                li.dataset.taskId = task.id;
+                li.innerHTML = `
+                    <div class="task-checkbox"></div>
+                    <span class="task-text">${task.text}</span>
+                    <span class="task-reward">+${task.reward} EXP</span>
+                    <button class="task-delete">×</button>
+                `;
+                taskList.appendChild(li);
+            });
+            
+            updateTaskCount();
+        }
+
+        // 添加任务按钮事件
+        document.getElementById('add-task-btn').addEventListener('click', () => {
+            const text = document.getElementById('new-task-input').value.trim();
+            const reward = parseInt(document.getElementById('new-task-reward').value);
+            
+            if (!text) {
+                showNotification('Please enter task content');
+                return;
+            }
+            
+            // EXP range validation
+            if (reward < 5) {
+                showNotification('Minimum EXP is 5');
+                return;
+            }
+            
+            if (reward > 30) {
+                showNotification('Maximum EXP is 30');
+                return;
+            }
+            
+            if (addTask(text, reward || 15)) {
+                document.getElementById('new-task-input').value = '';
+                document.getElementById('new-task-reward').value = '15';
+                updateTaskCount();
+            }
+        });
+
+        // 更新任务数量显示
+        function updateTaskCount() {
+            const tasks = users[currentUser].tasks || [];
+            document.getElementById('task-count').textContent = tasks.length;
+        }
+
+        // 完成任务 - 使用事件委托
+        function initTaskClickHandler() {
+            const taskList = document.getElementById('task-list');
+            if (!taskList) return;
+            
+            taskList.addEventListener('click', (e) => {
+                const taskItem = e.target.closest('.task-item');
+                const deleteBtn = e.target.closest('.task-delete');
+                
+                // Delete task
+                if (deleteBtn && taskItem) {
+                    const taskId = parseInt(taskItem.dataset.taskId);
+                    const task = users[currentUser].tasks.find(t => t.id === taskId);
+                    // Don't decrease completed count when deleting (for daily task limit)
+                    users[currentUser].tasks = users[currentUser].tasks.filter(t => t.id !== taskId);
+                    saveUserGameState();
+                    renderTasks();
+                    updateTaskCount();
+                    return;
+                }
+                
+                // 完成任务
+                if (!taskItem || taskItem.classList.contains('completed')) return;
+                if (!users[currentUser] || !users[currentUser].tasks) return;
+
+                // Check if daily task limit reached
+                const completedCount = users[currentUser].completedTaskCount || 0;
+                if (completedCount >= 10) {
+                    showNotification('Daily task limit reached');
+                    return;
+                }
+
+                taskItem.classList.add('completed');
+                const taskId = parseInt(taskItem.dataset.taskId);
+                const tasks = users[currentUser].tasks;
+                const task = tasks.find(t => t.id === taskId);
+                const expReward = task ? task.reward : parseInt(taskItem.querySelector('.task-reward').textContent.match(/\d+/)[0]);
+                
+                // 保存任务完成状态
+                if (task) {
+                    task.completed = true;
+                    // 记录已完成任务数量（用于限制添加）
+                    users[currentUser].completedTaskCount = (users[currentUser].completedTaskCount || 0) + 1;
+                }
+                
+                // 连击加成
+                let finalReward = expReward;
+                if (gameState.combo >= 3) {
+                    finalReward *= 2;
+                    showNotification('⚡ 连击加成！经验翻倍！');
+                    showComboBurst();
+                }
+                
+                // 显示任务完成提示
+                showNotification(`✅ Task completed! +${finalReward} EXP!`);
+
+                gameState.exp += finalReward;
+                // 检查是否升级（每级所需经验递增300）
+                const expNeeded = gameState.gardenLevel * 300; // 第1级需要300，第2级需要600，依此类推
+                
+                if (gameState.exp >= expNeeded && gameState.gardenLevel < 8) {
+                    gameState.exp -= expNeeded;
+                    gameState.gardenLevel++;
+                    showNotification(`🎉 Level Up! Garden Level ${gameState.gardenLevel}!`);
+                    // 等级提升时解锁新功能
+                    unlockGardenFeatures(gameState.gardenLevel);
+                    // 显示升级庆祝动画
+                    showLevelUpAnimation();
+                    // 更新花园视觉效果
+                    updateGardenVisuals();
+                } else if (gameState.gardenLevel >= 8) {
+                    // 已达到最高等级，提示用户
+                    if (gameState.exp >= expNeeded) {
+                        gameState.exp = expNeeded - 1; // 保持经验值不超过所需
+                        showNotification(`🏆 Congratulations! Your garden has reached max level 8!`);
+                    }
+                }
+                gameState.combo++;
+                gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+                showCombo(gameState.combo);
+                
+                // 完成第一个任务时恢复1点生命值
+                const completedTasks = users[currentUser].tasks.filter(t => t.completed).length;
+                const totalTasks = users[currentUser].tasks.length;
+                if (completedTasks === 1 && gameState.hp < 100) {
+                    gameState.hp = Math.min(100, gameState.hp + 1);
+                    showNotification('❤️ 完成第一个任务！恢复1点生命值！');
+                }
+                
+                // 完成所有任务时恢复5点生命值（每天只能获得一次）
+                if (completedTasks === totalTasks && totalTasks > 0 && gameState.hp < 100) {
+                    // 检查今天是否已经获得过完成所有任务的奖励
+                    const today = new Date().toDateString();
+                    if (users[currentUser].lastFullRewardDate !== today) {
+                        gameState.hp = Math.min(100, gameState.hp + 5);
+                        users[currentUser].lastFullRewardDate = today;
+                        showNotification('🎉 完成所有任务！恢复5点生命值！');
+                    }
+                }
+                
+                // 完成任务让宠物开心
+                affectPetByTask();
+
+                // 完成任务给花园加阳光
+                gardenState.sunshineLevel = Math.min(100, gardenState.sunshineLevel + 10);
+
+                // 每150经验开宝箱
+                if (gameState.exp % 150 < finalReward % 150) {
+                    setTimeout(openLootBox, 500);
+                }
+
+                // 在更新所有状态后保存游戏状态
+                saveUserGameState();
+
+                updateStatus();
+                updateBattleReport();
+                updateTaskCount();
+            });
+        }
+
+        // 连击爆发特效
+        function showComboBurst() {
+            const burst = document.createElement('div');
+            burst.style.cssText = `
+                position: fixed; font-size: 100px; pointer-events: none;
+                animation: comboExplode 1s ease-out forwards;
+                z-index: 1000; left: 50%; top: 50%;
+            `;
+            burst.textContent = '💥';
+            document.body.appendChild(burst);
+            setTimeout(() => burst.remove(), 1000);
+        }
+
+        // 日记数据结构 - 存储在用户数据中
+        function getDefaultDiaries() {
+            return [
+                { id: 1, text: '🌞 Beautiful day today! Completed all tasks, feeling great!', date: new Date().toDateString() },
+                { id: 2, text: '📚 Read a great book and learned many new things.', date: new Date().toDateString() },
+                { id: 3, text: '💪 Persistence prevails! Make small progress every day!', date: new Date().toDateString() }
+            ];
+        }
+        
+        // 渲染日记列表
+        function renderDiaries() {
+            const diaryList = document.getElementById('diary-list');
+            if (!diaryList) return;
+            
+            const diaries = users[currentUser].diaries || getDefaultDiaries();
+            diaryList.innerHTML = '';
+            
+            diaries.forEach(diary => {
+                const diaryItem = document.createElement('div');
+                diaryItem.className = 'diary-item';
+                diaryItem.dataset.diaryId = diary.id;
+                diaryItem.innerHTML = `
+                    <div class="diary-text">${diary.text}</div>
+                    <div class="diary-meta">
+                        <span class="diary-date">${diary.date}</span>
+                        <button class="diary-delete" style="background: #c75050; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">Delete</button>
+                    </div>
+                `;
+                diaryList.appendChild(diaryItem);
+            });
+        }
+        
+        // 添加日记
+        function addDiary(text) {
+            if (!text.trim()) {
+                showNotification('Please enter diary content');
+                return;
+            }
+            
+            if (!users[currentUser].diaries) {
+                users[currentUser].diaries = getDefaultDiaries();
+            }
+            
+            const newDiary = {
+                id: Date.now(),
+                text: text.trim(),
+                date: new Date().toDateString()
+            };
+            
+            users[currentUser].diaries.unshift(newDiary);
+            saveUserGameState();
+            renderDiaries();
+            showNotification('Diary added successfully!');
+        }
+        
+        // Delete diary
+        function deleteDiary(diaryId) {
+            if (!users[currentUser].diaries) return;
+            
+            // Ensure type consistency, convert to number
+            const targetId = parseInt(diaryId);
+            users[currentUser].diaries = users[currentUser].diaries.filter(d => d.id !== targetId);
+            saveUserGameState();
+            renderDiaries();
+            showNotification('Diary deleted');
+        }
+        
+        // 初始化日记事件
+        function initDiaryHandlers() {
+            const addBtn = document.getElementById('add-diary-btn');
+            const input = document.getElementById('new-diary-input');
+            const diaryList = document.getElementById('diary-list');
+            
+            // 添加日记
+            addBtn.addEventListener('click', () => {
+                addDiary(input.value);
+                input.value = '';
+            });
+            
+            // 回车添加
+            input.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    addDiary(input.value);
+                    input.value = '';
+                }
+            });
+            
+            // Delete diary
+            diaryList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('diary-delete')) {
+                    const diaryItem = e.target.closest('.diary-item');
+                    if (diaryItem) {
+                        // Use dataset to get ID, ensure consistency with rendering
+                        const diaryId = parseInt(diaryItem.dataset.diaryId);
+                        if (confirm('Are you sure you want to delete this diary?')) {
+                            deleteDiary(diaryId);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 设置预算按钮事件
+        let confirmCount = 0;
+        let pendingBudget = null;
+        let isChangingBudget = false; // 是否正在更改已锁定的预算
+        
+        const changeBudgetBtn = document.getElementById('change-budget-btn');
+        
+        // 设置预算按钮 - 使用事件委托
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'set-budget-btn') {
+                handleSetBudget();
+            } else if (e.target.id === 'confirm-budget-btn') {
+                handleConfirmBudget();
+            } else if (e.target.id === 'change-budget-btn') {
+                handleChangeBudget();
+            }
+        });
+        
+        function handleSetBudget() {
+            const newBudget = parseInt(budgetInput.value);
+            if (newBudget && newBudget >= 100) {
+                pendingBudget = newBudget;
+                
+                // If budget is locked, need confirmation to change
+                if (gameState.budget.locked) {
+                    isChangingBudget = true;
+                    confirmCount = 1;
+                    showNotification(`⚠️ Budget locked! Are you sure you want to change to ${newBudget}? Click confirm!`);
+                } else {
+                    confirmCount = 1;
+                    showNotification(`⚠️ Click confirm button again to set ${newBudget} budget!`);
+                }
+                
+                // 显示确认按钮，隐藏更改按钮
+                document.getElementById('confirm-budget-btn').style.display = 'inline-block';
+                changeBudgetBtn.style.display = 'none';
+            } else {
+                showNotification('❌ Please enter a valid budget amount (minimum 100)');
+            }
+        }
+        
+        function handleConfirmBudget() {
+            if (confirmCount === 1) {
+                confirmCount = 2;
+                if (isChangingBudget) {
+                    showNotification(`⚠️ Are you sure you want to change budget to ${pendingBudget}? Click one more time to confirm!`);
+                } else {
+                    showNotification(`⚠️ Are you sure you want to set ${pendingBudget} as monthly budget? Click one more time to confirm!`);
+                }
+            } else if (confirmCount === 2) {
+                // 双重确认完成
+                gameState.budget.maxBudget = pendingBudget;
+                gameState.budget.spent = Math.min(gameState.budget.spent, pendingBudget);
+                gameState.budget.locked = true;
+                gameState.budget.lastSetDate = new Date().toDateString();
+                
+                // 隐藏确认按钮，禁用输入，显示更改按钮
+                document.getElementById('confirm-budget-btn').style.display = 'none';
+                changeBudgetBtn.style.display = 'inline-block';
+                budgetInput.disabled = true;
+                setBudgetBtn.disabled = true;
+                
+                // 保存到 localStorage
+                saveUserGameState();
+                updateBattleReport();
+                showNotification('✅ Monthly budget set and locked!');
+                confirmCount = 0;
+                pendingBudget = null;
+                isChangingBudget = false;
+            }
+        }
+        
+        // 处理更改预算
+        function handleChangeBudget() {
+            if (confirm('确定要更改已锁定的预算吗？')) {
+                // 解锁预算，允许修改
+                gameState.budget.locked = false;
+                budgetInput.disabled = false;
+                setBudgetBtn.disabled = false;
+                changeBudgetBtn.style.display = 'none';
+                budgetInput.focus();
+                showNotification('🔓 预算已解锁，可以修改了！');
+                saveUserGameState();
+                updateBattleReport();
+            }
+        }
+        
+        // 更新战报
+        function updateBattleReport() {
+            // 更新预算输入框显示
+            budgetInput.value = gameState.budget.maxBudget;
+            
+            // 如果预算已锁定，禁用输入并显示更改按钮
+            if (gameState.budget.locked) {
+                budgetInput.disabled = true;
+                setBudgetBtn.disabled = true;
+                document.getElementById('confirm-budget-btn').style.display = 'none';
+                changeBudgetBtn.style.display = 'inline-block';
+            } else {
+                budgetInput.disabled = false;
+                setBudgetBtn.disabled = false;
+                changeBudgetBtn.style.display = 'none';
+            }
+            
+            const budget = gameState.budget.maxBudget;
+            const spentAmount = gameState.budget.spent;
+            const remainingAmount = budget - spentAmount;
+            const spentPercent = Math.round((spentAmount / budget) * 100);
+            const remainingPercent = 100 - spentPercent;
+            
+            let reportText = `<h3>💰 Monthly Budget Control</h3>`;
+            
+            // Show budget locked status
+            if (gameState.budget.locked) {
+                reportText += `<p style="color: #4CAF50; font-weight: bold; display: flex; align-items: center; gap: 8px;">🔒 Budget Locked <span style="font-size: 11px; color: #666;">(Click "Change Budget" to modify)</span></p>`;
+            }
+            
+            // 创建进度条
+            const progressBarColor = spentPercent <= 20 ? '#4CAF50' : spentPercent <= 50 ? '#FF9800' : spentPercent <= 80 ? '#FFC107' : '#F44336';
+            reportText += `
+                <div style="margin: 15px 0; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden;">
+                    <div style="height: 100%; width: ${Math.min(spentPercent, 100)}%; background: linear-gradient(90deg, ${progressBarColor}, ${progressBarColor}dd); border-radius: 10px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 12px;">
+                        <span style="color: white; font-size: 11px; font-weight: 600;">${spentPercent}%</span>
+                    </div>
+                </div>
+            `;
+            
+            // Goal: Don't overspend, so praise saving and warn about overspending
+            if (spentPercent <= 20) {
+                reportText += `
+                    <p style="font-size: 15px; line-height: 1.6;">🌟 <strong>Amazing!</strong> Only spent <span class="highlight" style="font-size: 16px;">${spentAmount.toFixed(2)}</span> this month (${spentPercent}%)!</p>
+                    <p style="font-size: 14px; color: #555;">Remaining: <span style="color: #4CAF50; font-weight: bold;">${remainingAmount.toFixed(2)}</span> (${remainingPercent}%)</p>
+                    <p style="font-size: 13px; color: #666; margin-top: 8px;">You're a budgeting master! Keep it up! 💚</p>
+                `;
+            } else if (spentPercent <= 50) {
+                reportText += `
+                    <p style="font-size: 15px; line-height: 1.6;">👍 <strong>Good job!</strong> Spent <span class="highlight" style="font-size: 16px;">${spentAmount.toFixed(2)}</span> this month (${spentPercent}%)</p>
+                    <p style="font-size: 14px; color: #555;">Remaining: <span style="color: #FF9800; font-weight: bold;">${remainingAmount.toFixed(2)}</span> (${remainingPercent}%)</p>
+                    <p style="font-size: 13px; color: #666; margin-top: 8px;">Keep going, control your spending! 💪</p>
+                `;
+            } else if (spentPercent <= 80) {
+                reportText += `
+                    <p style="font-size: 15px; line-height: 1.6;">⚠️ <strong>Warning!</strong> Spent <span class="highlight" style="font-size: 16px;">${spentAmount.toFixed(2)}</span> this month (${spentPercent}%)</p>
+                    <p style="font-size: 14px; color: #555;">Remaining budget: <span style="color: #FFC107; font-weight: bold;">${remainingAmount.toFixed(2)}</span> (${remainingPercent}%)</p>
+                    <p style="font-size: 13px; color: #666; margin-top: 8px;">Need to control spending! 🛡️</p>
+                `;
+            } else if (spentPercent < 100) {
+                reportText += `
+                    <p style="font-size: 15px; line-height: 1.6;">🔥 <strong>Warning!</strong> Spent <span class="highlight" style="font-size: 16px;">${spentAmount.toFixed(2)}</span> this month (${spentPercent}%)</p>
+                    <p style="font-size: 14px; color: #555;">Running low: <span style="color: #F44336; font-weight: bold;">${remainingAmount.toFixed(2)}</span> (${remainingPercent}%)</p>
+                    <p style="font-size: 13px; color: #666; margin-top: 8px;">Almost over budget! Control your spending! ⚔️</p>
+                `;
+            } else {
+                reportText += `
+                    <p style="font-size: 15px; line-height: 1.6;">💀 <strong>Over Budget!</strong> Exceeded by <span class="highlight" style="font-size: 16px; color: #F44336;">${(spentAmount - budget).toFixed(2)}</span>!</p>
+                    <p style="font-size: 14px; color: #555;">Monthly budget: <span style="color: #666; font-weight: bold;">${budget}</span></p>
+                    <p style="font-size: 14px; color: #555;">Spent: <span style="color: #F44336; font-weight: bold;">${spentAmount.toFixed(2)}</span></p>
+                    <p style="font-size: 13px; color: #666; margin-top: 8px;">Better budget control next month! 😰</p>
+                `;
+            }
+            
+            battleReport.innerHTML = reportText;
+        }
+
+
+
+        // 添加消费记录
+        const addExpenseBtn = document.getElementById('add-expense');
+        const expenseName = document.getElementById('expense-name');
+        const expenseAmount = document.getElementById('expense-amount');
+        const moodSelector = document.getElementById('mood-selector');
+        const expenseList = document.getElementById('expense-list');
+
+        let selectedMood = 'neutral';
+
+        moodSelector.addEventListener('click', (e) => {
+            if (e.target.classList.contains('mood-btn')) {
+                document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                selectedMood = e.target.dataset.mood;
+            }
+        });
+
+        // 检查并重置每日消费
+        function checkDailyExpenseReset() {
+            const today = new Date().toDateString();
+            if (gameState.lastExpenseDate !== today) {
+                // 新的一天，重置今日消费显示
+                gameState.dailyExpenses = [];
+            }
+        }
+        
+        // 月度消费详情弹窗
+        function initMonthlyExpenseView() {
+            const monthlyExpenseOverlay = document.getElementById('monthly-expense-overlay');
+            const monthlyExpenseContent = document.getElementById('monthly-expense-content');
+            
+            // 打开月度消费详情
+            const monthlyExpenseBtn = document.getElementById('monthly-expense-btn');
+            if (monthlyExpenseBtn) {
+                monthlyExpenseBtn.addEventListener('click', () => {
+                    renderMonthlyExpenses(monthlyExpenseContent);
+                    if (monthlyExpenseOverlay) {
+                        monthlyExpenseOverlay.style.display = 'flex';
+                    }
+                });
+            }
+            
+            // 关闭月度消费详情
+            const closeMonthlyBtn = document.getElementById('close-monthly-btn');
+            if (closeMonthlyBtn) {
+                closeMonthlyBtn.addEventListener('click', () => {
+                    if (monthlyExpenseOverlay) {
+                        monthlyExpenseOverlay.style.display = 'none';
+                    }
+                });
+            }
+            
+            // 点击弹窗外部关闭
+            if (monthlyExpenseOverlay) {
+                monthlyExpenseOverlay.addEventListener('click', (e) => {
+                    if (e.target === monthlyExpenseOverlay) {
+                        monthlyExpenseOverlay.style.display = 'none';
+                    }
+                });
+            }
+        }
+        
+        // 渲染月度消费详情
+        function renderMonthlyExpenses(container) {
+            const monthlyData = gameState.monthlyExpenses || {};
+            const dates = Object.keys(monthlyData).sort((a, b) => new Date(b) - new Date(a));
+            
+            if (dates.length === 0 || !container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+                        <p style="font-size: 16px; color: var(--dark-wood);">暂无月度消费记录</p>
+                        <p style="font-size: 13px; color: var(--wood); margin-top: 8px;">记录你的第一笔消费吧！</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            let totalMonthAmount = 0;
+            
+            const moodEmojis = { happy: '😊', sad: '😢', anxious: '😰', excited: '🤩', neutral: '😐' };
+            
+            dates.forEach(date => {
+                const dayExpenses = monthlyData[date];
+                const dayTotal = dayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                totalMonthAmount += dayTotal;
+                
+                // Format date display
+                const dateObj = new Date(date);
+                const formattedDate = dateObj.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    weekday: 'short'
+                });
+                
+                html += `
+                    <div style="margin-bottom: 16px; background: rgba(212, 197, 227, 0.3); border-radius: 12px; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--lavender);">
+                            <span style="font-weight: 600; color: var(--dark-wood);">📅 ${formattedDate}</span>
+                            <span style="color: #c75050; font-weight: bold; font-size: 15px;">${dayTotal.toFixed(2)}</span>
+                        </div>
+                        <div style="padding: 8px 16px;">
+                `;
+                
+                dayExpenses.forEach((expense, index) => {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; ${index < dayExpenses.length - 1 ? 'border-bottom: 1px solid rgba(0,0,0,0.06);' : ''}">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 18px;">${getExpenseEmoji(expense.name)}</span>
+                                <span style="font-size: 14px; color: var(--dark-wood);">${expense.name}</span>
+                                <span style="font-size: 12px;">${moodEmojis[expense.mood] || '😐'}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="color: #c75050; font-weight: 600; font-size: 14px;">-$${expense.amount.toFixed(2)}</span>
+                                <span style="font-size: 11px; color: var(--wood); display: block;">${expense.time}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            });
+            
+            // Add monthly summary
+            html = `
+                <div style="background: linear-gradient(135deg, var(--warm-sun), #FFE066); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
+                    <div style="font-family: 'Press Start 2P', cursive; font-size: 11px; color: var(--dark-wood); margin-bottom: 8px;">📊 Monthly Total</div>
+                    <div style="font-size: 32px; font-weight: bold; color: var(--dark-wood);">${totalMonthAmount.toFixed(2)}</div>
+                    <div style="font-size: 12px; color: var(--wood); margin-top: 8px;">
+                        ${dates.length} days · ${Object.values(monthlyData).reduce((sum, day) => sum + day.length, 0)} transactions
+                    </div>
+                </div>
+            ` + html;
+            
+            container.innerHTML = html;
+        }
+        
+        addExpenseBtn.addEventListener('click', () => {
+            const name = expenseName.value.trim();
+            const amount = parseFloat(expenseAmount.value);
+            
+            if (!name || isNaN(amount) || amount <= 0) {
+                showNotification('Please enter valid expense information!');
+                return;
+            }
+
+            const today = new Date().toDateString();
+            
+            // 检查是否是新的一天，需要重置今日消费
+            checkDailyExpenseReset();
+
+            // 更新已消费金额
+            gameState.budget.spent = gameState.budget.spent + amount;
+            
+            // 消费扣金币
+            gameState.gold = Math.max(0, gameState.gold - amount);
+            
+            // 重置连击
+            gameState.combo = 0;
+
+            // 根据心情设置天气
+            setWeatherByMood(selectedMood);
+
+            // Create expense record object
+            const expenseRecord = {
+                id: Date.now(),
+                name: name,
+                amount: amount,
+                mood: selectedMood,
+                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                date: today
+            };
+
+            // 添加到今日消费
+            gameState.dailyExpenses.push(expenseRecord);
+            
+            // 添加到月度消费记录
+            if (!gameState.monthlyExpenses[today]) {
+                gameState.monthlyExpenses[today] = [];
+            }
+            gameState.monthlyExpenses[today].push(expenseRecord);
+            
+            gameState.lastExpenseDate = today;
+
+            // 添加消费记录到页面
+            const expenseItem = document.createElement('div');
+            expenseItem.className = 'expense-item';
+            expenseItem.dataset.expenseId = expenseRecord.id;
+            const moodEmojis = { happy: '😊', sad: '😢', anxious: '😰', excited: '🤩', neutral: '😐' };
+            expenseItem.innerHTML = `
+                <div class="expense-info">
+                    <span class="expense-emoji">${getExpenseEmoji(name)}</span>
+                    <div class="expense-details">
+                        <h4>${name}</h4>
+                        <p>${expenseRecord.time} · ${moodEmojis[selectedMood]} ${getMoodText(selectedMood)}</p>
+                    </div>
+                </div>
+                <span class="expense-amount">-${amount.toFixed(2)}</span>
+            `;
+            expenseList.insertBefore(expenseItem, expenseList.firstChild);
+
+            // 消费对宠物和花园的影响
+            affectPetByExpense(amount, selectedMood);
+            
+
+
+            // 更新状态
+            updateStatus();
+            updateBattleReport();
+
+            // 保存游戏状态
+            saveUserGameState();
+
+            // 清空输入
+            expenseName.value = '';
+            expenseAmount.value = '';
+        });
+        
+        function getExpenseEmoji(name) {
+            if (name.includes('milk tea') || name.includes('coffee') || name.includes('drink')) return '🥤';
+            if (name.includes('shopping') || name.includes('clothes') || name.includes('shoe')) return '🛍️';
+            if (name.includes('food') || name.includes('meal') || name.includes('lunch') || name.includes('dinner')) return '🍔';
+            if (name.includes('game') || name.includes('recharge')) return '🎮';
+            if (name.includes('book') || name.includes('study') || name.includes('course')) return '📚';
+            return '💸';
+        }
+
+        function getMoodText(mood) {
+            const texts = { happy: 'Happy', sad: 'Sad', anxious: 'Anxious', excited: 'Excited', neutral: 'Neutral' };
+            return texts[mood];
+        }
+
+        // 根据心情设置天气
+        function setWeatherByMood(mood) {
+            // 移除之前的天气效果
+            document.querySelectorAll('.weather-rain, .weather-thunder').forEach(el => el.remove());
+            
+            switch(mood) {
+                case 'sad':
+                    createRainEffect();
+                    break;
+                case 'anxious':
+                    createThunderEffect();
+                    break;
+                case 'happy':
+                    document.getElementById('sun').classList.add('sunny');
+                    break;
+            }
+        }
+
+        // Create rain effect
+        function createRainEffect() {
+            // Remove other weather effects first
+            document.querySelectorAll('.weather-rain, .weather-thunder').forEach(el => el.remove());
+            
+            const rainContainer = document.createElement('div');
+            rainContainer.className = 'weather-rain';
+            rainContainer.style.cssText = `
+                position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden;
+            `;
+            
+            for (let i = 0; i < 25; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.cssText = `
+                    position: absolute; width: 2px; height: 20px;
+                    background: linear-gradient(to bottom, transparent, rgba(174, 194, 224, 0.8));
+                    animation: rain 1s linear infinite;
+                    left: ${(Math.random() * 100)}%;
+                    animation-delay: ${(Math.random() * 2)}s;
+                    animation-duration: ${(0.5 + Math.random() * 0.5)}s;
+                `;
+                rainContainer.appendChild(drop);
+            }
+            
+            document.getElementById('garden').appendChild(rainContainer);
+            gardenState.weather = 'rain';
+            showNotification('🌧️ Feeling a bit down, rain started in the garden...');
+        }
+
+        // 创建雷雨效果
+        function createThunderEffect() {
+            createRainEffect();
+            
+            const thunder = document.createElement('div');
+            thunder.className = 'weather-thunder';
+            thunder.style.cssText = `
+                position: absolute; width: 100%; height: 100%;
+                background: rgba(255, 255, 255, 0); pointer-events: none;
+                transition: background 0.1s ease;
+            `;
+            document.getElementById('garden').appendChild(thunder);
+            
+            // 闪电效果
+            const flashInterval = setInterval(() => {
+                thunder.style.background = 'rgba(255, 255, 255, 0.8)';
+                setTimeout(() => thunder.style.background = 'rgba(255, 255, 255, 0)', 100);
+            }, 2000);
+            
+            // 5秒后停止闪电
+            setTimeout(() => clearInterval(flashInterval), 5000);
+            
+            gardenState.weather = 'thunder';
+            showNotification('⛈️ Anxiety strikes, thunder and lightning in the garden...');
+        }
+
+        // 宠物状态管理
+        let petState = 'neutral';
+        let petStateTimer = null;
+
+        // 设置宠物状态
+        function setPetState(state) {
+            // 清除之前的状态定时器
+            if (petStateTimer) {
+                clearTimeout(petStateTimer);
+                petStateTimer = null;
+            }
+
+            // 移除所有状态类
+            pet.classList.remove('pet-neutral', 'pet-happy', 'pet-sad', 'pet-angry', 'pet-sleepy', 'pet-surprised', 'pet-excited');
+            petMouth.classList.remove('pet-mouth-neutral', 'pet-mouth-happy', 'pet-mouth-sad', 'pet-mouth-angry', 'pet-mouth-sleepy', 'pet-mouth-surprised', 'pet-mouth-excited');
+
+            // 设置新状态
+            petState = state;
+            pet.classList.add(`pet-${state}`);
+            petMouth.classList.add(`pet-mouth-${state}`);
+
+            // Show mood change notification
+            const moodMessages = {
+                neutral: '🐾 Pet returned to calm',
+                happy: '🐾 Pet is happy!',
+                sad: '🐾 Pet is a bit sad...',
+                angry: '🐾 Pet is angry!',
+                sleepy: '🐾 Pet is sleepy...',
+                surprised: '🐾 Pet is surprised!',
+                excited: '🐾 Pet is very excited!'
+            };
+            if (moodMessages[state]) {
+                showNotification(moodMessages[state]);
+            }
+
+            // 设置自动恢复时间（不同状态恢复时间不同）
+            const recoveryTime = {
+                neutral: 0,    // 中性状态不需要恢复
+                happy: 8000,   // 开心持续8秒
+                sad: 8000,     // 伤心持续8秒
+                angry: 8000,   // 生气持续8秒
+                sleepy: 8000,  // 困倦持续8秒
+                surprised: 8000, // 惊讶持续8秒
+                excited: 8000  // 兴奋持续8秒
+            };
+
+            // 非中性状态会自动恢复
+            if (state !== 'neutral' && recoveryTime[state]) {
+                petStateTimer = setTimeout(() => {
+                    setPetState('neutral');
+                }, recoveryTime[state]);
+            }
+        }
+
+        // Expense effect on pet
+        function affectPetByExpense(amount, mood) {
+            // Large expense makes pet angry
+            if (amount > 100) {
+                setPetState('angry');
+                showNotification('😤 Pet is angry! You spent too much!');
+            }
+            // Medium expense makes pet sad
+            else if (amount > 50 || mood === 'sad') {
+                setPetState('sad');
+                showNotification('😢 Pet is sad...');
+            }
+            // Anxious mood makes pet tired
+            else if (mood === 'anxious') {
+                setPetState('sleepy');
+                showNotification('😴 Pet feels tired...');
+            }
+
+            // 花园枯萎效果
+            if (amount > 30) {
+                document.getElementById('main-plant').style.cssText = 'transform: rotate(5deg); opacity: 0.7; transition: all 0.5s;';
+                document.getElementById('big-tree').style.cssText = 'opacity: 0.6; transform: scale(0.95); transition: all 0.5s;';
+
+                setTimeout(() => {
+                    document.getElementById('main-plant').style.cssText = '';
+                    document.getElementById('big-tree').style.cssText = '';
+                }, 5000);
+            }
+        }
+
+        // 完成任务对宠物的影响
+        function affectPetByTask() {
+            // 完成任务让宠物开心或兴奋
+            if (gameState.combo >= 5) {
+                setPetState('excited');
+                showNotification('🎉 宠物超级兴奋！');
+            } else {
+                setPetState('happy');
+            }
+        }
+
+        // 获得奖励对宠物的影响
+        function affectPetByReward(reward) {
+            if (reward.rarity === 'legendary') {
+                setPetState('excited');
+                showNotification('🌟 宠物看到传说奖励超开心！');
+            } else if (reward.rarity === 'rare') {
+                setPetState('happy');
+            }
+        }
+
+        // 购买宠物零食
+        function feedPet() {
+            setPetState('excited');
+            showNotification('🍖 宠物开心地吃着零食！');
+        }
+
+        // Shop items
+        const shopItems = {
+            exp_boost: { name: 'EXP Scroll', emoji: '⭐', price: 50, effect: { exp: 30 }, desc: 'Gain 30 EXP' },
+            pet_food: { name: 'Pet Treat', emoji: '🍖', price: 20, effect: { pet: 'happy' }, desc: 'Makes pet happy' },
+            garden_boost: { name: 'Super Fertilizer', emoji: '🌿', price: 40, effect: { garden: 'boost' }, desc: 'Garden plants grow stronger' },
+            lucky_charm: { name: 'Lucky Charm', emoji: '🍀', price: 80, effect: { lucky: true }, desc: 'Guaranteed rare item next chest' }
+        };
+
+        let luckyCharmActive = false;
+
+        // 商店点击事件
+        const shopItemsContainer = document.getElementById('shop-items');
+        shopItemsContainer.addEventListener('click', (e) => {
+            const shopItem = e.target.closest('.shop-item');
+            if (!shopItem || shopItem.classList.contains('disabled')) return;
+
+            const itemId = shopItem.dataset.item;
+            const item = shopItems[itemId];
+
+            if (gameState.gold < item.price) {
+                showNotification('💰 金币不足！');
+                return;
+            }
+
+            // 扣除金币
+            gameState.gold -= item.price;
+
+            // 应用效果
+            applyShopItemEffect(item);
+
+            updateStatus();
+            showNotification(`${item.emoji} 购买成功！${item.desc}`);
+        });
+
+        // 应用商店物品效果
+        function applyShopItemEffect(item) {
+            if (item.effect.hp) {
+                gameState.hp = Math.min(100, gameState.hp + item.effect.hp);
+            }
+            if (item.effect.exp) {
+                gameState.exp += item.effect.exp;
+                if (gameState.exp % 50 < item.effect.exp % 50) {
+                    setTimeout(openLootBox, 500);
+                }
+            }
+            if (item.effect.pet === 'happy') {
+                feedPet();
+            }
+            if (item.effect.garden === 'boost') {
+                gardenState.plantGrowth = Math.min(5, gardenState.plantGrowth + 1);
+                gardenState.waterLevel = Math.min(100, gardenState.waterLevel + 30);
+                gardenState.sunshineLevel = Math.min(100, gardenState.sunshineLevel + 30);
+                showNotification('🌱 花园变得生机勃勃！');
+            }
+            if (item.effect.lucky) {
+                luckyCharmActive = true;
+                showNotification('🍀 幸运符已激活！下次宝箱必出稀有物品！');
+            }
+        }
+
+        // 初始化
+        updateStatus();
+        updateBattleReport();
+        renderDiaries();
+        initDiaryHandlers();
+        renderInventory();
+        // 延迟一点再更新花园，确保DOM完全加载
+        setTimeout(updateGardenVisuals, 100);
+    </script>
+</body>
+</html>
